@@ -13,3 +13,8 @@ Instrução de edição: recortar em formato quadrado apenas as três caixas d�
 pretas da bandeira, retirar a faixa azul e o excesso de amarelo, manter o símbolo
 completo e centralizado sobre amarelo, sem texto ou novos elementos.
 Os PNGs foram reduzidos para os tamanhos de uso no site.
+
+O favicon recebeu cantos arredondados com transparência em 11/10/2026,
+usando a ferramenta integrada `imagegen` e redução para 64 × 64.
+Instrução de edição: arredondar o fundo amarelo, preservando as três caixas
+d’água pretas, sem contorno, sombra, texto ou novos elementos.
