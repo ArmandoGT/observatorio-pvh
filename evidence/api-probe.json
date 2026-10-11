@@ -1,0 +1,34 @@
+[
+  {
+    "url": "https://api.portovelho.ro.gov.br/api/v1/obras?por-pagina=100",
+    "status": 200,
+    "contentType": "application/json",
+    "bytes": 467963,
+    "sample": "{\"data\":[{\"id\":30,\"nome\":\"PAVIMENTA\\u00c7\\u00c3O ASF\\u00c1LTICA EM VIA URBANA COM DRENAGEM E CAL\\u00c7ADAS CONTEMPLANDO A RUA: HUMAIT\\u00c1 \\u2013 BAI",
+    "checkedAt": "2026-10-11T15:27:42.760Z"
+  },
+  {
+    "url": "https://api.portovelho.ro.gov.br/api/v1/contratos?por-pagina=1",
+    "status": 200,
+    "contentType": "application/json",
+    "bytes": 7500,
+    "sample": "{\"data\":[{\"id\":4320,\"contrato_ano\":2026,\"contrato_numero\":126,\"numero\":\"CONTRATO N\\u00ba 126\\/2026\\/PGM\",\"data_assinatura\":\"2026-10-05\",\"valor\":{\"valu",
+    "checkedAt": "2026-10-11T15:27:42.847Z"
+  },
+  {
+    "url": "https://api.portovelho.ro.gov.br/api/v1/despesas/obras?por-pagina=1",
+    "status": 200,
+    "contentType": "application/json",
+    "bytes": 4903,
+    "sample": "{\"data\":[{\"id\":\"ffeb02cb-eba6-468b-92f9-2f6497515929\",\"unidade_gestora_id\":\"D5A1ADBD6EBC4B648C683B35F29A5990\",\"ano\":2024,\"data_documento\":\"2024-02-29\"",
+    "checkedAt": "2026-10-11T15:27:42.933Z"
+  },
+  {
+    "url": "https://api.portovelho.ro.gov.br/api/v1/obras/exportar/csv?ano=2026",
+    "status": 200,
+    "contentType": "text/csv; charset=UTF-8",
+    "bytes": 4382,
+    "sample": "\"id\",\"nome\",\"observacao\",\"modelo_contratacao\",\"valor_contratado\",\"valor_pago\",\"valor_a_medir\",\"porcentagem_executado\",\"data_contrato\",\"numero_convenio",
+    "checkedAt": "2026-10-11T15:27:43.681Z"
+  }
+]

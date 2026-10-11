@@ -1,0 +1,16 @@
+node_modules/
+.next/
+out/
+.openai/local/
+.env*
+*.tsbuildinfo
+artifacts/
+data/*.lock
+data/*.tmp
+evidence/*.html
+.cache/
+data/raw/
+evidence/api-obras.json
+evidence/api-contratos.json
+evidence/api-despesas-obras.json
+evidence/api-obras-exportar-csv.json

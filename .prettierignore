@@ -1,0 +1,8 @@
+node_modules
+.next
+out
+.cache
+data
+public/dados
+evidence
+artifacts
