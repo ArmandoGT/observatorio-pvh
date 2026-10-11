@@ -2,7 +2,11 @@
 
 O Observatório usa `output: "export"` no Next.js. `npm run build` gera HTML, JavaScript, CSS e dados em `out/`. Essa versão pode ser publicada como arquivos estáticos de um Worker, sem adaptador OpenNext ou servidor Next.js.
 
-## Workers com integração Git
+## Publicação pelo GitHub Actions
+
+Produção usa `.github/workflows/update-data.yml` para coletar, persistir no Supabase, exportar os dados, validar e publicar no Worker existente. A opção **Disable builds** da integração Git da Cloudflare está ativada para evitar publicações concorrentes de snapshots antigos. Consulte [secrets, agendamento e operação](supabase.md).
+
+## Alternativa: Workers com integração Git
 
 Inclua `wrangler.jsonc`, `package.json` e `package-lock.json` no repositório conectado à Cloudflare. Em **Settings > Build**, configure:
 
@@ -40,8 +44,8 @@ No Cloudflare Pages, use build `npm run build` e diretório de saída `out`. Pag
 
 ## Domínio e atualização dos dados
 
-Após o primeiro deploy, `pvh.dadosabertos.org` pode ser associado como domínio personalizado do Worker. Este arquivo não configura DNS ou domínio remotamente.
+O domínio personalizado `pvh.dadosabertos.org` está associado ao Worker `observatorio-pvh`.
 
-Os dados continuam sendo coletados por `npm run sync`. Atualizações exigem um novo build e deploy; a configuração de hospedagem não cria agendamento de coleta.
+Os dados são coletados por `npm run sync`. O workflow diário exporta a base persistida antes de construir e publicar o site. Configurar apenas a hospedagem não cria um agendamento de coleta.
 
 Referências: [arquivos estáticos e 404 em Workers](https://developers.cloudflare.com/workers/static-assets/routing/static-site-generation/), [Next.js estático no Pages](https://developers.cloudflare.com/pages/framework-guides/nextjs/deploy-a-static-nextjs-site/).

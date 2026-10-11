@@ -2,7 +2,7 @@
 
 MVP cívico independente para consultar obras municipais, contratos associados e documentos oficiais. Next.js 16.4.0, React 19.3.0 e TypeScript. Interface baseada no Figma: tema escuro `#131313`, superfÃ­cies `#201F1F`, amarelo-ouro `#F2C230` e fonte Geist. Consulte [a aplicaÃ§Ã£o do design](docs/design-figma.md).
 
-Obras é o primeiro módulo disponível. A identidade do portal e a navegação são comuns; novos temas podem ser acrescentados com suas próprias fontes e rotas. Consulte [o recorte e a expansão do observatório](docs/observatorio.md). Endereço recomendado: `pvh.dadosabertos.org`, ainda sem configuração de domínio personalizado.
+Obras é o primeiro módulo disponível. A identidade do portal e a navegação são comuns; novos temas podem ser acrescentados com suas próprias fontes e rotas. Consulte [o recorte e a expansão do observatório](docs/observatorio.md). Site público: [pvh.dadosabertos.org](https://pvh.dadosabertos.org/).
 
 ## Executar
 
@@ -26,12 +26,14 @@ npm start
 
 ## Atualizar dados
 
+O coletor persiste no Supabase, guardando o histórico e exportando a mesma base JSON para o site. O workflow `.github/workflows/update-data.yml` coleta e publica diariamente às 06:17 de Porto Velho, após pushes em `main` e por execução manual. Projeto, migração e secrets estão configurados: consulte [persistência e operação com Supabase](docs/supabase.md).
+
 ```sh
 npm run sync
 npm run build
 ```
 
-O comando percorre toda a paginação de `/api/v1/obras`, valida o total retornado, consulta os contratos pelo ID explícito e gera `data/snapshot.json` e `public/dados/obras.json`. Novos dados só chegam à hospedagem estática após reconstrução e publicação. Não há agendamento ativo ou promessa de atualização em tempo real.
+O comando percorre toda a paginação de `/api/v1/obras`, valida o total retornado, consulta os contratos pelo ID explícito e gera `data/snapshot.json` e `public/dados/obras.json`. Novos dados chegam à hospedagem estática após reconstrução e publicação pelo workflow. A coleta diária depende da disponibilidade das fontes e não representa atualização em tempo real.
 
 O armazenamento é incremental por ID e hash de conteúdo: primeira coleta, última alteração e registros ausentes são preservados. A leitura da API continua sendo uma varredura completa porque `/obras` não documenta filtro por atualização. Não se presume suporte a ETag, webhook ou cursor temporal.
 
@@ -90,8 +92,8 @@ Ver [fontes](docs/fontes.md), [arquitetura](docs/arquitetura.md), [esquema](docs
 
 1. Confirmar com o órgão publicador o significado de `porcentagem_executado`, `data_contrato`, `execucao` e `valor_a_medir`, além da periodicidade de publicação.
 2. Revalidar o catálogo quando retornar; identificar datasets e licença específica, sem substituir silenciosamente a origem.
-3. Acrescentar monitoramento e sincronização programada em CI, com alertas de falha de coleta e reconstrução/publicação condicionadas à validação.
-4. Migrar para PostgreSQL quando histórico de versões, múltiplos escritores ou maior volume justificarem o custo. O domínio já usa IDs de origem, centavos e timestamps separados.
+3. Acompanhar as execuções diárias no GitHub Actions e renovar o token Cloudflare antes de 09/01/2027.
+4. Expandir a persistência PostgreSQL para novos módulos conforme suas fontes forem validadas. O domínio já usa IDs de origem, centavos e timestamps separados.
 5. Associar despesas apenas quando houver relação documental inequívoca. Não adicionar mapa ou denúncias neste corte.
 
 ## Hospedagem
@@ -100,4 +102,4 @@ Para publicar como aplicação no Cloudflare Workers, o projeto inclui `wrangler
 
 O projeto gera uma exportação estática Next.js compatível com qualquer hospedagem estática. `.openai/hosting.json` identifica o Site do Work e declara `out/`. Não há dependência do serviço Sites para executar, coletar dados ou construir o projeto localmente.
 
-O código pode ser adaptado para execução com servidor Next.js retirando `output: 'export'`; persistência em PostgreSQL e uma API de atualização não estão implementadas neste MVP.
+O código pode ser adaptado para execução com servidor Next.js retirando `output: 'export'`. A persistência PostgreSQL está disponível no coletor; o site público continua estático e não oferece uma API de escrita.

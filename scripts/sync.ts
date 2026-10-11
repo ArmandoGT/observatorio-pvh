@@ -11,10 +11,12 @@ import { load } from "cheerio";
 import { snapshotSchema, type Snapshot } from "../src/lib/schema";
 import { normalizeWork, rawWorkSchema, stableHash } from "../src/lib/normalize";
 import { failureSnapshot, mergeWorks, safePageUrl } from "../src/lib/sync-core";
+import { createSnapshotStore } from "./lib/supabase-store";
 
 const dataDir = resolve("data"),
   snapshotPath = resolve(dataDir, "snapshot.json"),
   lockPath = resolve(dataDir, "sync.lock");
+const store = createSnapshotStore();
 await mkdir(dataDir, { recursive: true });
 const attemptedAt = new Date().toISOString();
 let previous = snapshotSchema.parse(
@@ -74,7 +76,25 @@ async function json(url: string) {
   return JSON.parse(body);
 }
 const registry: Snapshot["sources"] = [];
+let revision = 0;
+let previousContractCache = structuredClone(contractCache);
+let persistenceReady = false;
+let sourceCollected = false;
 try {
+  if (store) {
+    const state = await store.load();
+    revision = state.revision;
+    if (state.snapshot) {
+      previous = state.snapshot;
+      contractCache = state.contracts;
+    } else {
+      revision = await store.save(previous, contractCache, revision, {
+        kind: "seed",
+      });
+    }
+  }
+  previousContractCache = structuredClone(contractCache);
+  persistenceReady = true;
   let next: string | null =
     "https://api.portovelho.ro.gov.br/api/v1/obras?por-pagina=100";
   const visited = new Set<string>(),
@@ -249,6 +269,12 @@ try {
     sources: registry,
     changeSummary: merged.changeSummary,
   });
+  sourceCollected = true;
+  if (store)
+    await store.save(snapshot, contractCache, revision, {
+      raw,
+      startedAt: attemptedAt,
+    });
   await mkdir(resolve(dataDir, "raw"), { recursive: true });
   await atomic(resolve(dataDir, "raw", `${stableHash(raw)}.json`), raw);
   await atomic(resolve(dataDir, "contracts.json"), contractCache);
@@ -274,6 +300,8 @@ try {
     ),
   );
 } catch (error) {
+  // Falhas do banco/exportação não são atribuídas à API municipal.
+  if (!persistenceReady || sourceCollected) throw error;
   const message = error instanceof Error ? error.message : "Falha desconhecida";
   previous = failureSnapshot(previous, message, attemptedAt);
   previous.sources = previous.sources.map((s) =>
@@ -287,6 +315,10 @@ try {
         }
       : s,
   );
+  if (store)
+    await store.save(previous, previousContractCache, revision, {
+      startedAt: attemptedAt,
+    });
   await atomic(snapshotPath, previous);
   await mkdir(resolve("public", "dados"), { recursive: true });
   await atomic(resolve("public", "dados", "obras.json"), previous);

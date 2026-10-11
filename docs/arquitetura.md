@@ -6,7 +6,9 @@ flowchart LR
   C[API: contratos por ID] --> B
   B --> D[Normalização: centavos, datas, nulls e fontes]
   D --> E[Merge por ID e SHA-256]
-  E --> F[Snapshot JSON local]
+  E --> P[Supabase: estado e histórico]
+  P --> F[Exportação JSON local]
+  E -->|modo local sem banco| F
   F --> G[Next.js: geração estática]
   G --> H[Site público]
   F --> I[Download JSON]
@@ -18,7 +20,7 @@ flowchart LR
 
 **Next.js App Router com exportação estática.** A home, a listagem, as fichas e a metodologia são geradas em build. A busca, os filtros, a ordenação e a paginação funcionam no navegador sobre a base normalizada. Não há API de escrita exposta, login ou credenciais no cliente. O site continua servindo quando a origem municipal falha.
 
-**Persistência em arquivos.** Para 48 obras, um banco adicionaria custo operacional sem resolver a incerteza das fontes. `data/snapshot.json` é o contrato entre ingestão e interface. `data/contracts.json` guarda o cache dos contratos vinculados. Respostas completas ficam em `data/raw/` local por hash e são excluídas da publicação; o snapshot só publica os campos necessários.
+**Persistência Supabase e exportação em arquivos.** O PostgreSQL guarda o estado entre execuções de CI, o histórico de alterações e as tentativas de coleta. `data/snapshot.json` continua sendo o contrato entre ingestão e interface; `data/contracts.json` materializa o cache dos contratos vinculados. Respostas completas são preservadas no banco e em `data/raw/` local por hash, excluídas da publicação; o snapshot só publica os campos necessários. Sem configuração Supabase, o coletor mantém o modo local.
 
 **Atualização incremental do domínio.** A entrada é uma varredura completa; o merge compara hashes normalizados. IDs novos são incluídos, alterações mudam `lastChangedAt`, repetições conservam esse timestamp e ausentes são mantidos com `inLatestSnapshot=false`. A data de coleta muda independentemente da data de atualização municipal. Não há garantia de detecção de mudanças entre coletas.
 
@@ -35,12 +37,12 @@ flowchart LR
 
 O par snapshot/download é atualizado sequencialmente, não com uma transação distribuída. Execute coleta e build de forma serial; uma publicação que detecte diferença deve falhar na etapa de teste. O armazenamento local é adequado a um único escritor. Interrupção externa pode deixar o lock, cuja remoção requer verificar o processo.
 
-## PostgreSQL quando necessário
+## PostgreSQL no Supabase
 
-Migrar o repositório de snapshots para PostgreSQL quando forem exigidos histórico de versões de cada campo, consultas multiusuário, volume elevado ou vários escritores. Modelo sugerido: `sources`, `ingestion_runs`, `works`, `work_versions`, `contracts`, `documents`. Valores usam `bigint` em centavos; raw e versões podem usar JSONB. Chave única `(source_id, source_record_id)` e escrita transacional por run mantêm o contrato de domínio.
+O schema privado `observatory` reúne `module_state`, `sources`, `ingestion_runs`, `works`, `work_versions` e `contracts`. Valores usam `bigint` em centavos; respostas brutas e versões usam JSONB. A identidade da obra combina módulo e ID oficial, e a escrita transacional com revisão impede sobrescritas por uma execução antiga. Todas as tabelas têm RLS e acesso restrito ao coletor.
 
-Essa migração é um próximo passo, **não uma integração implementada**. O MVP executa sem `DATABASE_URL`, Docker ou serviços externos além da fonte pública durante a sincronização.
+A persistência Supabase está implementada como opção do coletor, usando transações, versões e um schema privado. O site permanece estático; o modo local continua disponível sem credenciais. Consulte [a implantação e operação](supabase.md). A aplicação da migração e a ativação do workflow remoto precisam ser verificadas separadamente.
 
 ## Publicação e operação
 
-Uma execução de sincronização altera o snapshot local. `next build` gera `out/`, incluindo a base para download. A publicação do Site envia esse build; não há coleta em cada acesso do cidadão. Um fluxo futuro de CI deve serializar `sync → test → typecheck → build → publish` e registrar falha sem substituir a versão válida. Nenhum agendamento foi criado nesta entrega.
+Uma execução de sincronização altera o snapshot local e, quando configurado, persiste primeiro no Supabase. `data:export` materializa a base persistida e `next build` gera `out/`, incluindo o download. O workflow diário serializa `sync → data:export → test → typecheck → build → deploy`; falhas impedem substituir a versão pública válida. O agendamento só fica ativo após o arquivo chegar ao GitHub e os secrets serem configurados.
