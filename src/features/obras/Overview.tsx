@@ -7,23 +7,6 @@ import { FigmaAsset } from "@/components/FigmaAsset";
 export function ObrasOverview() {
   const contracted = sumKnown(latestWorks, "contractedCents"),
     paid = sumKnown(latestWorks, "paidCents");
-  const statusCounts = [...new Set(latestWorks.map((w) => w.status))].map(
-    (status) => ({
-      status,
-      count: latestWorks.filter((w) => w.status === status).length,
-    }),
-  );
-  const organizations = [
-    ...new Set(
-      latestWorks.map((w) => w.organization).filter((s): s is string => !!s),
-    ),
-  ]
-    .map((name) => ({
-      name,
-      count: latestWorks.filter((w) => w.organization === name).length,
-    }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 5);
   return (
     <div className="works-overview">
       <section
@@ -105,67 +88,6 @@ export function ObrasOverview() {
             orçamento atual nem todas as obras da cidade.
           </p>
         </section>
-        <details className="analytics">
-          <summary>
-            <span className="analytics-heading">
-              <span className="icon-box">
-                <FigmaAsset file="2d89f.svg" />
-              </span>
-              <span>
-                <strong>Indicadores de obras</strong>
-                <small>
-                  Distribuição de registros por situação e órgãos responsáveis
-                  na base consultada
-                </small>
-              </span>
-            </span>
-            <span className="disclosure-action">
-              VER INDICADORES <FigmaAsset file="a2a26.svg" />
-            </span>
-          </summary>
-          <div className="analytics-grid">
-            <section>
-              <h2>Obras por situação</h2>
-              {statusCounts.map(({ status, count }) => (
-                <div className="chart-row" key={status}>
-                  <div>
-                    <span>{status}</span>
-                    <strong>{count}</strong>
-                  </div>
-                  <div className="chart-track">
-                    <span
-                      style={{
-                        width: `${latestWorks.length ? (count / latestWorks.length) * 100 : 0}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </section>
-            <section>
-              <h2>Órgãos com mais registros</h2>
-              {organizations.map(({ name, count }) => (
-                <div className="chart-row" key={name}>
-                  <div>
-                    <span>{name}</span>
-                    <strong>{count}</strong>
-                  </div>
-                  <div className="chart-track">
-                    <span
-                      style={{
-                        width: `${latestWorks.length ? (count / latestWorks.length) * 100 : 0}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </section>
-            <p className="overview-note">
-              Contagens de registros publicados, sem classificação de
-              irregularidade ou inferência de execução física.
-            </p>
-          </div>
-        </details>
       </div>
     </div>
   );

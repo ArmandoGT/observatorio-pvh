@@ -15,6 +15,12 @@ export function Navigation() {
         pathname.startsWith(module.href),
     })),
     {
+      href: "/indicadores/",
+      label: "Indicadores",
+      active:
+        pathname === "/indicadores" || pathname.startsWith("/indicadores/"),
+    },
+    {
       href: "/metodologia/",
       label: "Sobre",
       active: pathname.startsWith("/metodologia"),
