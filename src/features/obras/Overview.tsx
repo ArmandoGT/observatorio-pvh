@@ -3,7 +3,6 @@ import { worksModule } from "@/lib/observatory";
 import { snapshot, latestWorks } from "@/lib/data";
 import { currency, dateLabel, sumKnown } from "@/lib/display";
 import { WorkList } from "@/components/WorkList";
-import { HeroSearch } from "@/components/HeroSearch";
 import { FigmaAsset } from "@/components/FigmaAsset";
 
 export function ObrasOverview() {
@@ -26,15 +25,6 @@ export function ObrasOverview() {
     }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 5);
-  const suggestions = ["Pavimentação", "Drenagem", "SEMED", "SEMUSA"].filter(
-    (term) =>
-      latestWorks.some((w) =>
-        [w.title, w.organization, w.organizationName]
-          .join(" ")
-          .toLowerCase()
-          .includes(term.toLowerCase()),
-      ),
-  );
   return (
     <div className="works-overview">
       <section
@@ -51,7 +41,6 @@ export function ObrasOverview() {
             Explorar obras <FigmaAsset file="6a0f6.svg" />
           </Link>
         </div>
-        <HeroSearch suggestions={suggestions} />
       </section>
       <div className="container">
         <section
