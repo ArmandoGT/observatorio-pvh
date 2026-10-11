@@ -4,10 +4,6 @@ export default function Home() {
   return (
     <main id="conteudo" className="home-page">
       <section className="hero container">
-        <span className="eyebrow status-pill">
-          <span />
-          OBSERVATÓRIO DE PORTO VELHO
-        </span>
         <h1>
           <em>Porto Velho</em>, em dados.
         </h1>

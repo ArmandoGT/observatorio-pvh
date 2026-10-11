@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { FileSearch, X } from "lucide-react";
+import { Eye, FileSearch, X } from "lucide-react";
 import type { Work } from "@/lib/schema";
 import { contractLabel, currency, percentLabel } from "@/lib/display";
 import {
@@ -231,7 +231,7 @@ export function WorkList({
                     {home ? "LOCALIZAÇÃO" : "ÓRGÃO E LOCALIZAÇÃO"}
                   </th>
                   <th scope="col" className={home ? "" : "numeric"}>
-                    {home ? "ÓRGÃO" : "VALORES (CONTRATADO / PAGO)"}
+                    {home ? "ÓRGÃO" : "CONTRATADO / PAGO"}
                   </th>
                   <th scope="col" className={home ? "numeric" : ""}>
                     {home ? "VALOR CONTRATADO" : "EXECUÇÃO INFORMADA"}
@@ -334,6 +334,7 @@ export function WorkList({
                         className={home ? "text-link" : "row-button"}
                         href={`/obras/${work.id}/`}
                         aria-label={`Ver detalhes: ${work.title}`}
+                        title={home ? undefined : "Ver detalhes da obra"}
                       >
                         {home ? (
                           <>
@@ -341,7 +342,7 @@ export function WorkList({
                             <FigmaAsset file="e2b85.svg" />
                           </>
                         ) : (
-                          "Ver Obra"
+                          <Eye size={20} aria-hidden="true" />
                         )}
                       </Link>
                     </td>

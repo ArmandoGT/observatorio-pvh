@@ -18,10 +18,6 @@ export default function Method() {
   return (
     <main id="conteudo" className="container page-main method-page">
       <header className="method-heading">
-        <span className="eyebrow status-pill">
-          <span />
-          TRANSPARÊNCIA E CRITÉRIOS
-        </span>
         <h1 className="page-title">
           Metodologia e Governança <em>de Dados</em>
         </h1>
@@ -45,37 +41,9 @@ export default function Method() {
           </span>
         </div>
       </header>
-      <section className="surface-card about-banner" id="sobre">
-        <span className="eyebrow gold-text">
-          <FigmaAsset file="e362f.svg" />
-          INICIATIVA CÍVICA E INDEPENDENTE
-        </span>
-        <h2>Dados públicos explicados de forma simples, direta e auditável.</h2>
-        <p>
-          O Observatório de Porto Velho organiza registros oficiais para
-          facilitar a consulta e o controle social. É uma iniciativa
-          independente, sem vínculo com a administração pública. Obras é o
-          primeiro módulo disponível: cada ficha reúne valores, contratos e
-          documentos com o contexto necessário para compreender as informações
-          publicadas.
-        </p>
-        <div className="method-meta">
-          <span>
-            <FigmaAsset file="3dd98.svg" />
-            Fontes municipais identificadas
-          </span>
-          <span>
-            <FigmaAsset file="7f516.svg" />
-            Coleta automatizada sob demanda
-          </span>
-          <span>
-            <FigmaAsset file="b37fc.svg" />
-            Sem classificação automática de irregularidade
-          </span>
-        </div>
-      </section>
+  
       <div className="method-accordions">
-        <details className="method-accordion" id="fontes" open>
+        <details className="method-accordion" id="fontes">
           <summary>
             <span className="accordion-icon">
               <FigmaAsset file="d03f3.svg" />
@@ -147,7 +115,7 @@ export default function Method() {
             </div>
           </div>
         </details>
-        <details className="method-accordion" open>
+        <details className="method-accordion">
           <summary>
             <span className="accordion-icon">
               <FigmaAsset file="089c6.svg" />
@@ -320,43 +288,7 @@ export default function Method() {
           </div>
         </details>
       </div>
-      <section className="surface-card download-band" id="termos">
-        <div>
-          <h2>Confira e reutilize a base.</h2>
-          <p>
-            O arquivo reúne campos normalizados, datas de coleta, fontes e
-            limitações. Os registros exibidos são os publicados na base
-            municipal consultada.
-          </p>
-        </div>
-        <div className="download-actions">
-          <Link className="button button-soft" href="/obras/">
-            Consultar registros <ArrowUpRight size={14} />
-          </Link>
-          <a
-            className="button button-secondary"
-            href="/dados/obras.json"
-            download
-          >
-            <FigmaAsset file="5d648.svg" />
-            Exportar base (.json)
-          </a>
-        </div>
-        <p className="legal-note">
-          As{" "}
-          <a
-            href="https://api.portovelho.ro.gov.br/docs/api"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            regras de uso da API municipal
-          </a>{" "}
-          declaram acesso universal e uso livre, respeitadas as limitações
-          legais. Não identificamos licença padronizada, SLA ou frequência de
-          atualização. A indisponibilidade do catálogo impede confirmar seus
-          datasets e termos específicos.
-        </p>
-      </section>
+      
     </main>
   );
 }

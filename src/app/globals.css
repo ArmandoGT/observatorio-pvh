@@ -146,36 +146,59 @@ a {
   z-index: 20;
 }
 .header-inner {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
   gap: 16px;
   min-height: 64px;
 }
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   flex: none;
-  font-weight: 600;
-  font-size: 20px;
-  letter-spacing: -0.5px;
-  white-space: nowrap;
+  max-width: 100%;
+  padding-block: 12px;
+  justify-self: start;
 }
 .brand:hover {
   text-decoration: none;
 }
 .brand b {
   color: var(--gold);
-  font-weight: 600;
+  font-weight: inherit;
 }
-.brand-logo {
-  display: block;
-  width: 160px;
-  height: 32px;
-  object-fit: contain;
+.brand-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--gold);
+  border-radius: 10px;
+  background: #f2c2300d;
+  color: var(--gold);
+}
+.brand-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.brand-name {
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+}
+.brand-tagline {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 18px;
 }
 .main-nav {
+  grid-column: 2;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -1084,34 +1107,86 @@ tbody th {
   right: 0;
   pointer-events: none;
 }
+.catalog-page.container {
+  width: min(1440px, calc(100% - 64px));
+}
+.catalog-table {
+  min-width: 1160px;
+  font-size: 14px;
+}
 .catalog-table th:nth-child(1) {
-  width: 29%;
+  width: 30%;
 }
 .catalog-table th:nth-child(2) {
-  width: 16%;
+  width: 22%;
 }
 .catalog-table th:nth-child(3) {
-  width: 19%;
-}
-.catalog-table th:nth-child(4) {
   width: 17%;
 }
-.catalog-table th:nth-child(5) {
+.catalog-table th:nth-child(4) {
   width: 12%;
 }
+.catalog-table th:nth-child(5) {
+  width: 13%;
+}
 .catalog-table th:nth-child(6) {
-  width: 7%;
+  width: 6%;
+}
+.catalog-table th,
+.catalog-table td {
+  padding-inline: 20px;
 }
 .catalog-table thead th {
-  padding-block: 24px;
+  padding-block: 20px;
+  line-height: 20px;
 }
 .catalog-table tbody th,
 .catalog-table tbody td {
-  padding-block: 18px;
+  padding-block: 24px;
+  border-bottom: 1px solid #ffffff0a;
 }
 .catalog-table .work-title {
   font-size: 15px;
-  line-height: 19px;
+  line-height: 23px;
+  -webkit-line-clamp: 3;
+}
+.catalog-table .work-subtitle {
+  font-size: 12px;
+  line-height: 20px;
+  margin-top: 8px;
+  -webkit-line-clamp: 3;
+}
+.catalog-table .location-text {
+  display: block;
+  font-size: 14px;
+  line-height: 22px;
+}
+.catalog-table .money {
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.catalog-table .paid-value {
+  font-size: 13px;
+  margin-top: 8px;
+  font-variant-numeric: tabular-nums;
+}
+.catalog-table .action-column {
+  text-align: center;
+  padding-inline: 12px;
+}
+.catalog-table .row-button {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+}
+.catalog-table .progress-header {
+  font-size: 13px;
+}
+.catalog-table .status {
+  padding: 8px 12px;
+  line-height: 18px;
 }
 .organization-name {
   display: block;
@@ -1896,9 +1971,6 @@ dd small {
   color: var(--muted);
 }
 @media (max-width: 1190px) {
-  .brand-logo {
-    display: none;
-  }
   .header-actions {
     gap: 12px;
   }
@@ -1965,22 +2037,31 @@ dd small {
   }
 }
 @media (max-width: 700px) {
-  .container {
+  .container,
+  .catalog-page.container {
     width: calc(100% - 32px);
   }
   .header-inner {
+    display: flex;
     flex-wrap: wrap;
     min-height: 64px;
     gap: 8px;
     padding-block: 12px;
   }
   .brand {
-    font-size: 19px;
+    padding-block: 0;
+    gap: 10px;
+  }
+  .brand-name {
+    font-size: 18px;
+  }
+  .brand-tagline {
+    font-size: 11px;
   }
   .main-nav {
     order: 3;
     width: 100%;
-    justify-content: space-between;
+    justify-content: center;
   }
   .main-nav a,
   .main-nav a[aria-current] {

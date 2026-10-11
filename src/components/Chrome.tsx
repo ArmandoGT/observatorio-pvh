@@ -1,7 +1,8 @@
 import Link from "next/link";
+import { TrendingUp } from "lucide-react";
 import { FigmaAsset } from "./FigmaAsset";
 import { Navigation } from "./Navigation";
-import { observatory, worksModule } from "@/lib/observatory";
+import { observatory } from "@/lib/observatory";
 
 export function Header() {
   return (
@@ -12,38 +13,19 @@ export function Header() {
           className="brand"
           aria-label={`${observatory.name}, início`}
         >
-          <img
-            src="/figma/bac06.png"
-            width={160}
-            height={32}
-            alt=""
-            className="brand-logo"
-          />
-          <span>
-            Observatório <b>PVH</b>
+          <span className="brand-mark" aria-hidden="true">
+            <TrendingUp size={24} strokeWidth={2} />
+          </span>
+          <span className="brand-copy" aria-hidden="true">
+            <span className="brand-name">
+              Observatório <b>PVH</b>
+            </span>
+            <span className="brand-tagline">
+              Dados públicos · Transparência municipal
+            </span>
           </span>
         </Link>
         <Navigation />
-        <div className="header-actions">
-          <a
-            href={worksModule.downloadHref}
-            download
-            className="open-data-pill"
-          >
-            <span /> DADOS DE OBRAS
-          </a>
-          <Link href="/metodologia/#fontes" className="sources-link">
-            <FigmaAsset file="601c7.svg" />
-            Fontes de dados
-          </Link>
-          <Link
-            href="/metodologia/#sobre"
-            className="about-icon"
-            aria-label="Sobre o Observatório"
-          >
-            <FigmaAsset file="b79c4.svg" />
-          </Link>
-        </div>
       </div>
     </header>
   );
@@ -56,7 +38,6 @@ export function Footer() {
         <div className="footer-copy">
           <div className="footer-title">
             <Link href="/">Observatório PVH</Link>
-            <span>TRANSPARÊNCIA CÍVICA</span>
           </div>
           <p>
             Iniciativa cívica e independente para compreender os dados públicos
@@ -71,10 +52,6 @@ export function Footer() {
           </small>
         </div>
         <nav aria-label="Informações sobre o projeto">
-          <Link href="/metodologia/">
-            <FigmaAsset file="0c30f.svg" />
-            Metodologia e fontes
-          </Link>
           <Link href="/metodologia/#termos">
             <FigmaAsset file="16ebc.svg" />
             Termos e Dados Públicos

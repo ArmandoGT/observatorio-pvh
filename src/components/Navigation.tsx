@@ -16,10 +16,9 @@ export function Navigation() {
     })),
     {
       href: "/metodologia/",
-      label: "Metodologia",
+      label: "Sobre",
       active: pathname.startsWith("/metodologia"),
     },
-    { href: "/metodologia/#sobre", label: "Sobre", active: false },
   ];
   return (
     <nav aria-label="Navegação principal" className="main-nav">
