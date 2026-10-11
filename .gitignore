@@ -9,6 +9,7 @@ data/*.lock
 data/*.tmp
 evidence/*.html
 .cache/
+.wrangler/
 data/raw/
 evidence/api-obras.json
 evidence/api-contratos.json

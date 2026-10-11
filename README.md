@@ -96,6 +96,8 @@ Ver [fontes](docs/fontes.md), [arquitetura](docs/arquitetura.md), [esquema](docs
 
 ## Hospedagem
 
+Para publicar como aplicação no Cloudflare Workers, o projeto inclui `wrangler.jsonc` apontando para `out/` e Wrangler como ferramenta de desenvolvimento. Use build `npm run build` e deploy `npm run deploy`. Consulte [a configuração e o diagnóstico de deploy na Cloudflare](docs/cloudflare.md).
+
 O projeto gera uma exportação estática Next.js compatível com qualquer hospedagem estática. `.openai/hosting.json` identifica o Site do Work e declara `out/`. Não há dependência do serviço Sites para executar, coletar dados ou construir o projeto localmente.
 
 O código pode ser adaptado para execução com servidor Next.js retirando `output: 'export'`; persistência em PostgreSQL e uma API de atualização não estão implementadas neste MVP.
