@@ -357,7 +357,7 @@ export function WorkList({
                 <strong>Nota de transparência:</strong> Registros oficiais, com
                 limitações sinalizadas. Não são conclusões de irregularidade.
               </span>
-              <Link href="/metodologia/#termos">Termos de uso dos dados</Link>
+              <Link href="/termos/">Termos de uso dos dados</Link>
             </div>
           ) : (
             <div className="pagination-footer">

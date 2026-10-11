@@ -175,10 +175,13 @@ a {
   flex: none;
   width: 40px;
   height: 40px;
-  border: 1px solid var(--gold);
+}
+.brand-mark img {
+  display: block;
+  width: 40px;
+  height: auto;
   border-radius: 10px;
-  background: #f2c2300d;
-  color: var(--gold);
+  object-fit: contain;
 }
 .brand-copy {
   display: flex;
@@ -1712,6 +1715,65 @@ dd small {
   max-width: 780px;
   font-size: 15px;
   line-height: 24.38px;
+  margin-bottom: 0;
+}
+.terms-page {
+  max-width: 960px;
+}
+.terms-index {
+  margin-top: 32px;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-soft);
+}
+.terms-index > .eyebrow {
+  color: var(--dim);
+  font-size: 11px;
+}
+.terms-index ol {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 12px 32px;
+  padding-left: 20px;
+  margin: 16px 0 0;
+  color: var(--dim);
+  font-size: 14px;
+}
+.terms-index a,
+.terms-content a {
+  color: var(--gold);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.terms-content {
+  margin: 32px 0 64px;
+  padding: clamp(20px, 4vw, 40px);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.terms-content section {
+  scroll-margin-top: 96px;
+}
+.terms-content section + section {
+  margin-top: 32px;
+  padding-top: 32px;
+  border-top: 1px solid var(--line);
+}
+.terms-content h2 {
+  margin: 0 0 16px;
+  font-size: clamp(19px, 3vw, 23px);
+  line-height: 1.4;
+  letter-spacing: -0.4px;
+}
+.terms-content p {
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.terms-content p:last-child {
   margin-bottom: 0;
 }
 .method-accordions {

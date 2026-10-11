@@ -19,6 +19,11 @@ export function Navigation() {
       label: "Sobre",
       active: pathname.startsWith("/metodologia"),
     },
+    {
+      href: "/termos/",
+      label: "Termos",
+      active: pathname === "/termos" || pathname.startsWith("/termos/"),
+    },
   ];
   return (
     <nav aria-label="Navegação principal" className="main-nav">

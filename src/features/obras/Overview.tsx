@@ -2,7 +2,6 @@ import Link from "next/link";
 import { worksModule } from "@/lib/observatory";
 import { snapshot, latestWorks } from "@/lib/data";
 import { currency, dateLabel, sumKnown } from "@/lib/display";
-import { WorkList } from "@/components/WorkList";
 import { FigmaAsset } from "@/components/FigmaAsset";
 
 export function ObrasOverview() {
@@ -167,22 +166,6 @@ export function ObrasOverview() {
             </p>
           </div>
         </details>
-        <section className="explore-section">
-          <div className="section-heading">
-            <div>
-              <h2>Obras recentes na base consultada</h2>
-              <p>
-                Consulte os registros por atualização da fonte, com acesso aos
-                documentos oficiais.
-              </p>
-            </div>
-            <Link href="/obras/" className="text-link">
-              Ver todas as {latestWorks.length} obras{" "}
-              <FigmaAsset file="6a0f6.svg" />
-            </Link>
-          </div>
-          <WorkList works={latestWorks} home />
-        </section>
       </div>
     </div>
   );

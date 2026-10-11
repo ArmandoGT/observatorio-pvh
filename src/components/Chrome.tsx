@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { TrendingUp } from "lucide-react";
+import Image from "next/image";
 import { FigmaAsset } from "./FigmaAsset";
 import { Navigation } from "./Navigation";
 import { observatory } from "@/lib/observatory";
@@ -14,7 +14,13 @@ export function Header() {
           aria-label={`${observatory.name}, início`}
         >
           <span className="brand-mark" aria-hidden="true">
-            <TrendingUp size={24} strokeWidth={2} />
+            <Image
+              src="/images/caixas-dagua-porto-velho.png"
+              alt=""
+              width={40}
+              height={40}
+              unoptimized
+            />
           </span>
           <span className="brand-copy" aria-hidden="true">
             <span className="brand-name">
@@ -52,9 +58,9 @@ export function Footer() {
           </small>
         </div>
         <nav aria-label="Informações sobre o projeto">
-          <Link href="/metodologia/#termos">
+          <Link href="/termos/">
             <FigmaAsset file="16ebc.svg" />
-            Termos e Dados Públicos
+            Termos de uso
           </Link>
         </nav>
       </div>
