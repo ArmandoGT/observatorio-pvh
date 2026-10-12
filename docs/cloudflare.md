@@ -20,6 +20,14 @@ npm run deploy
 publica o pacote ja construido e preserva variaveis configuradas no painel.
 Execute `build:cloudflare` antes de `deploy` depois de alterar o codigo.
 
+O lockfile deve conservar os pacotes nativos opcionais de todas as plataformas,
+inclusive Linux usado no Actions. `tests/package-lock.test.ts` verifica essa
+integridade. Ao reconstruir o lockfile, use uma pasta limpa, sem `node_modules`,
+e confira as versoes antes de substituir o arquivo versionado. Gerar o arquivo
+com apenas os pacotes instalados no Windows pode remover os bindings de Linux.
+No Windows, encerre as previas Next.js antes de `npm ci`: elas mantem o modulo
+SWC carregado e impedem sua substituicao.
+
 O OpenNext inicializa `getPlatformProxy` antes de publicar para ler variaveis
 dos bindings. O Wrangler exige uma URI local para Hyperdrive nessa etapa,
 mesmo sem consultas ao banco. Por isso, `localConnectionString` em
