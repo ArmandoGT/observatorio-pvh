@@ -4,6 +4,7 @@ import { Header, Footer } from "@/components/Chrome";
 import { observatory } from "@/lib/observatory";
 import "./globals.css";
 import "./ux.css";
+import "./experience.css";
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,

@@ -1,8 +1,9 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { Eye, Search, X } from "lucide-react";
+import { ChevronRight, Search, X } from "lucide-react";
 import { currency, dateLabel } from "@/lib/display";
+import { sentenceCase } from "@/lib/work-presentation";
 import type { ContractSummary } from "./schema";
 import {
   contractFilterQuery,
@@ -180,15 +181,15 @@ export function ContractCatalog({
               </caption>
               <thead>
                 <tr>
-                  <th scope="col">CONTRATO E OBJETO</th>
-                  <th scope="col">EMPRESA E ÓRGÃO</th>
+                  <th scope="col">Contrato e objeto</th>
+                  <th scope="col">Empresa e órgão</th>
                   <th scope="col" className="numeric">
-                    VALOR INFORMADO
+                    Valor informado
                   </th>
-                  <th scope="col">VIGÊNCIA</th>
-                  <th scope="col">SITUAÇÃO</th>
+                  <th scope="col">Vigência</th>
+                  <th scope="col">Situação</th>
                   <th scope="col" className="action-column">
-                    AÇÃO
+                    <span className="sr-only">Detalhes</span>
                   </th>
                 </tr>
               </thead>
@@ -203,7 +204,9 @@ export function ContractCatalog({
                         {contract.number}
                       </Link>
                       <p className="contract-object">
-                        {contract.object ?? "Objeto não informado"}
+                        {contract.object
+                          ? sentenceCase(contract.object)
+                          : "Objeto não informado"}
                       </p>
                       <small className="contract-meta">
                         {contract.process
@@ -247,7 +250,7 @@ export function ContractCatalog({
                         title="Ver detalhes do contrato"
                         prefetch={false}
                       >
-                        <Eye size={20} aria-hidden="true" />
+                        <ChevronRight size={20} aria-hidden="true" />
                       </Link>
                     </td>
                   </tr>

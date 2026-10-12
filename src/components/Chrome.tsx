@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Github } from "lucide-react";
 import { FigmaAsset } from "./FigmaAsset";
 import { Navigation } from "./Navigation";
+import { CommandPalette } from "./CommandPalette";
 import { observatory } from "@/lib/observatory";
 
 export function Header() {
@@ -33,6 +34,7 @@ export function Header() {
           </span>
         </Link>
         <Navigation />
+        <CommandPalette />
       </div>
     </header>
   );

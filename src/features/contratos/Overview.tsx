@@ -1,20 +1,28 @@
-import Link from "next/link";
+import { FileText } from "lucide-react";
 import { contractsModule } from "@/lib/observatory";
+import { ModuleCard } from "@/components/ModuleCard";
 import { getContractsData } from "./data";
-import { dateLabel } from "@/lib/display";
+
 export async function ContractsOverview() {
-  const { latestContracts, contractSnapshot } = await getContractsData();
+  const { latestContracts } = await getContractsData();
+  const total = latestContracts.length;
+  const active = latestContracts.filter((contract) =>
+    /^ativo$/i.test(contract.status.trim()),
+  ).length;
   return (
-    <section className="module-card" aria-labelledby="contracts-heading">
-      <h2 id="contracts-heading">{contractsModule.title}</h2>
-      <p>Encontre empresas, valores e documentos dos contratos.</p>
-      <small className="contract-meta">
-        {latestContracts.length.toLocaleString("pt-BR")} contratos · Coleta em{" "}
-        {dateLabel(contractSnapshot.generatedAt)}
-      </small>
-      <Link href={contractsModule.href} className="button button-secondary">
-        Explorar contratos →
-      </Link>
-    </section>
+    <ModuleCard
+      id="contratos"
+      icon={FileText}
+      title={contractsModule.title}
+      href={contractsModule.href}
+      cta="Explorar contratos"
+      figure={total.toLocaleString("pt-BR")}
+      figureLabel="contratos publicados"
+      gauge={{
+        percent: total ? (active / total) * 100 : null,
+        label: `${active.toLocaleString("pt-BR")} com situação “Ativo” na fonte`,
+      }}
+      note="Empresas, valores, vigência e documentos de cada contrato."
+    />
   );
 }

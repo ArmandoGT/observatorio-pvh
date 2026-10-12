@@ -339,15 +339,25 @@ export function WorkList({
                           <span>
                             {percentLabel(work.reportedExecutionPercent)}
                           </span>
-                          <small className="percent-context">
-                            Definição não confirmada
-                          </small>
+                          {work.reportedExecutionPercent !== null && (
+                            <span className="percent-track" aria-hidden="true">
+                              <span
+                                style={{
+                                  width: `${Math.max(0, Math.min(100, work.reportedExecutionPercent))}%`,
+                                }}
+                              />
+                            </span>
+                          )}
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
+              <p className="table-footnote">
+                Percentual da fonte: a Prefeitura não define se é avanço físico
+                ou financeiro.
+              </p>
             </div>
             <ul className="mobile-works">
               {shown.map((work) => (

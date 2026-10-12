@@ -1,20 +1,35 @@
-import Link from "next/link";
+import { CircleDollarSign } from "lucide-react";
 import { revenueModule } from "@/lib/observatory";
-import { dateLabel } from "@/lib/display";
+import { currency, dateLabel, percentLabel } from "@/lib/display";
+import { ModuleCard } from "@/components/ModuleCard";
 import { getRevenueData } from "./data";
+import { revenueTotals } from "./filters";
+
 export async function RevenueOverview() {
-  const { revenueSnapshot } = await getRevenueData();
+  const { latestRevenue, latestRevenueYear, revenueSnapshot } =
+    await getRevenueData();
+  const totals = revenueTotals(
+    latestRevenue.filter(
+      (entry) => entry.year === latestRevenueYear && entry.kind === "budget",
+    ),
+  );
+  const asOf =
+    revenueSnapshot.years.find((year) => year.year === latestRevenueYear)
+      ?.lastDocumentDate ?? null;
   return (
-    <section className="module-card" aria-labelledby="revenue-heading">
-      <h2 id="revenue-heading">{revenueModule.title}</h2>
-      <p>Acompanhe a arrecadação e os documentos do orçamento.</p>
-      <small className="contract-meta">
-        Exercícios {revenueSnapshot.years.map((y) => y.year).join(" e ")} ·
-        Coleta em {dateLabel(revenueSnapshot.generatedAt)}
-      </small>
-      <Link href={revenueModule.href} className="button button-secondary">
-        Explorar receitas →
-      </Link>
-    </section>
+    <ModuleCard
+      id="receitas"
+      icon={CircleDollarSign}
+      title={revenueModule.title}
+      href={revenueModule.href}
+      cta="Explorar receitas"
+      figure={currency(totals.realizedCents, true)}
+      figureLabel={`arrecadados em ${latestRevenueYear ?? "—"}`}
+      gauge={{
+        percent: totals.percent,
+        label: `${percentLabel(totals.percent)} da previsão anual de ${currency(totals.plannedCents, true)}`,
+      }}
+      note={`Documentos até ${dateLabel(asOf)}. Não representa saldo em caixa.`}
+    />
   );
 }
