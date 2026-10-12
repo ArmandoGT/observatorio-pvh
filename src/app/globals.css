@@ -858,6 +858,10 @@ tbody th {
   gap: 8px;
   min-height: 44px;
 }
+.footer-inner nav .footer-github {
+  gap: 8px;
+  min-height: 44px;
+}
 .page-main {
   padding-top: 40px;
   padding-bottom: 64px;
@@ -2422,7 +2426,11 @@ dd small {
   .footer-inner nav {
     gap: 16px;
   }
-  .page-main {
+  .footer-inner nav .footer-github {
+  gap: 8px;
+  min-height: 44px;
+}
+.page-main {
     padding-top: 28px;
     padding-bottom: 40px;
   }
