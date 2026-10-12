@@ -20,6 +20,14 @@ npm run deploy
 publica o pacote ja construido e preserva variaveis configuradas no painel.
 Execute `build:cloudflare` antes de `deploy` depois de alterar o codigo.
 
+O OpenNext inicializa `getPlatformProxy` antes de publicar para ler variaveis
+dos bindings. O Wrangler exige uma URI local para Hyperdrive nessa etapa,
+mesmo sem consultas ao banco. Por isso, `localConnectionString` em
+`wrangler.jsonc` aponta para `127.0.0.1:1`, com valores ficticios. Essa URI
+nao e enviada como conexao de producao: o Worker publicado usa o `id` do
+Hyperdrive e suas credenciais ja configuradas. O CI nao precisa de um
+PostgreSQL local nem de secrets adicionais do banco.
+
 O pacote OpenNext 1.20.10 precisa incluir `preview-props.json` para Next.js
 16.4. O patch em `patches/` acrescenta esse manifesto ao glob do adaptador e
 e aplicado automaticamente por `postinstall`, inclusive em `npm ci`.
@@ -60,6 +68,11 @@ Para Node.js, use `.env.local` com as variaveis de `.env.example` e execute
 Para conferir o runtime Workers, execute `npm run build:cloudflare` seguido de
 `npm run preview`; Wrangler carrega explicitamente `.env.local` como
 variaveis locais do Worker. Esse arquivo permanece fora do Git.
+Para consultas reais nessa previa, configure no ambiente do processo
+`CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE` com a URI do
+banco de desenvolvimento. Ela substitui a URI ficticia; nao use a conta
+administrativa e preserve a verificacao TLS. Consulte a
+[configuracao local do Hyperdrive](https://developers.cloudflare.com/hyperdrive/configuration/local-development/).
 
 Falha da prefeitura preserva o ultimo estado valido no banco e seu aviso de
 coleta. Falha de acesso ao banco mostra o estado de erro da pagina; downloads

@@ -23,6 +23,9 @@
     {
       "binding": "HYPERDRIVE",
       "id": "183b9e22d2494a2da8d490cd64698cdd",
+      // OpenNext inicializa um proxy local no deploy, sem consultar o banco.
+      // Em producao, Wrangler usa apenas o id do Hyperdrive.
+      "localConnectionString": "postgres://local:unused@127.0.0.1:1/local",
     },
   ],
 }
