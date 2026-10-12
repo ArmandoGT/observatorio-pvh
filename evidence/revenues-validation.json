@@ -1,0 +1,24 @@
+{
+  "checkedAt": "2026-10-12T04:36:31.501Z",
+  "portalId": 12535,
+  "years": [
+    {
+      "year": 2025,
+      "sourceTotalCents": 398030503981,
+      "collectedTotalCents": 398030503981,
+      "match": true,
+      "receipts": 68779,
+      "planned": 388,
+      "url": "https://api.portovelho.ro.gov.br/api/v1/receitas/total-por-ano?portal_id=12535&ano=2025"
+    },
+    {
+      "year": 2026,
+      "sourceTotalCents": 250697981666,
+      "collectedTotalCents": 250697981666,
+      "match": true,
+      "receipts": 41718,
+      "planned": 430,
+      "url": "https://api.portovelho.ro.gov.br/api/v1/receitas/total-por-ano?portal_id=12535&ano=2026"
+    }
+  ]
+}

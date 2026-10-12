@@ -29,7 +29,7 @@ flowchart LR
 ## Proteções e recuperação
 
 - Lock de escrita impede duas coletas simultâneas.
-- Timeout de 15 segundos, três tentativas limitadas e pausas curtas para falhas transitórias; sem agressividade ou coleta de toda a API de despesas.
+- Timeout de 15 segundos por tentativa, até quatro tentativas e intervalo mínimo de 1,5 segundo entre chamadas à API municipal. HTTP 429 respeita `Retry-After` ou espera crescente de 60/120/240 segundos; esperas indicadas acima de cinco minutos interrompem a coleta. Consulte [a política de coleta](contratos.md#persistência-e-atualização).
 - Envelope, total, IDs, paginação e origem de links são validados. Contagem incompleta, base inesperadamente vazia após uma base existente ou dados estruturalmente inválidos preservam a base anterior.
 - Snapshot é escrito em arquivo temporário e substituído por rename. O download é materializado a partir do mesmo objeto, e um teste confirma igualdade.
 - Links só podem usar HTTP/HTTPS de domínios municipais; a publicação usa HTTPS. HTML de observações é convertido em texto e renderizado pelo React.

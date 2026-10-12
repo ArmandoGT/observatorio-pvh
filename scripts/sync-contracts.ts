@@ -19,6 +19,7 @@ import {
   safeContractPageUrl,
 } from "../src/features/contratos/sync-core";
 import { createContractStore } from "./lib/contract-store";
+import { createSourceRequester } from "./lib/source-request";
 
 const path = resolve("data/contracts-snapshot.json");
 const lockPath = resolve("data/contracts-sync.lock");
@@ -32,6 +33,7 @@ let previous: ContractSnapshot | null = null;
 let revision = 0;
 let persistenceReady = false;
 let sourceCollected = false;
+const request = createSourceRequester();
 async function exportSnapshot(snapshot: ContractSnapshot) {
   for (const destination of [path, resolve("public/dados/contratos.json")]) {
     await mkdir(resolve("public/dados"), { recursive: true });
@@ -43,41 +45,23 @@ async function exportSnapshot(snapshot: ContractSnapshot) {
   }
 }
 async function pageJson(url: string) {
-  for (let attempt = 0; attempt < 3; attempt++) {
-    try {
-      const response = await fetch(url, {
-        headers: {
-          Accept: "application/json",
-          "User-Agent": "ObservatorioPVH/0.1",
-          ...(process.env.PMPV_API_TOKEN
-            ? { Authorization: `Bearer ${process.env.PMPV_API_TOKEN}` }
-            : {}),
-        },
-        signal: AbortSignal.timeout(15000),
-      });
-      if ([429, 502, 503, 504].includes(response.status) && attempt < 2) {
-        await new Promise((resolve) =>
-          setTimeout(resolve, 1000 * (attempt + 1)),
-        );
-        continue;
-      }
-      if (
-        !response.ok ||
-        !response.headers.get("content-type")?.includes("json")
-      )
-        throw new Error(
-          `Resposta inválida da API de contratos (HTTP ${response.status}).`,
-        );
-      const body = await response.text();
-      if (Buffer.byteLength(body) > 20 * 1024 * 1024)
-        throw new Error("Página de contratos excede 20 MiB.");
-      return JSON.parse(body);
-    } catch (error) {
-      if (attempt === 2) throw error;
-      await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
-    }
-  }
-  throw new Error("Falha na coleta de contratos.");
+  const response = await request(url, {
+    headers: {
+      Accept: "application/json",
+      "User-Agent": "ObservatorioPVH/0.1",
+      ...(process.env.PMPV_API_TOKEN
+        ? { Authorization: `Bearer ${process.env.PMPV_API_TOKEN}` }
+        : {}),
+    },
+  });
+  if (!response.ok || !response.headers.get("content-type")?.includes("json"))
+    throw new Error(
+      `Resposta inválida da API de contratos (HTTP ${response.status}).`,
+    );
+  const body = await response.text();
+  if (Buffer.byteLength(body) > 20 * 1024 * 1024)
+    throw new Error("Página de contratos excede 20 MiB.");
+  return JSON.parse(body);
 }
 try {
   try {
@@ -126,7 +110,6 @@ try {
         normalizeContract(raw, at, before.get(`pvh-contrato-${raw.id}`)),
       );
     next = page.links.next;
-    if (next) await new Promise((resolve) => setTimeout(resolve, 120));
   }
   if (current.length !== total)
     throw new Error(

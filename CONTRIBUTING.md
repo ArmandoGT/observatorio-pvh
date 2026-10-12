@@ -31,16 +31,16 @@ Abra o endereço informado no terminal. As bases coletadas já estão versionada
 
 ## Onde encontrar o código
 
-| Caminho                   | Conteúdo                                         |
-| ------------------------- | ------------------------------------------------ |
-| `src/app/`                | Páginas, rotas e estilos globais                 |
-| `src/components/`         | Componentes compartilhados, cabeçalho e rodapé   |
-| `src/features/`           | Funcionalidades dos módulos de obras e contratos |
-| `src/lib/`                | Leitura, validação e normalização dos dados      |
-| `scripts/`                | Coleta, exportação e prévia local                |
-| `tests/`                  | Testes de dados e comportamentos críticos        |
-| `docs/`                   | Fontes, decisões, arquitetura e operação         |
-| `data/` e `public/dados/` | Bases utilizadas pelo site e seus downloads      |
+| Caminho                   | Conteúdo                                                   |
+| ------------------------- | ---------------------------------------------------------- |
+| `src/app/`                | Páginas, rotas e estilos globais                           |
+| `src/components/`         | Componentes compartilhados, cabeçalho e rodapé             |
+| `src/features/`           | Funcionalidades dos módulos de obras, contratos e receitas |
+| `src/lib/`                | Leitura, validação e normalização dos dados                |
+| `scripts/`                | Coleta, exportação e prévia local                          |
+| `tests/`                  | Testes de dados e comportamentos críticos                  |
+| `docs/`                   | Fontes, decisões, arquitetura e operação                   |
+| `data/` e `public/dados/` | Bases utilizadas pelo site e seus downloads                |
 
 Antes de alterar a coleta ou o significado de um campo, consulte [fontes e limites](docs/fontes.md), [esquema](docs/esquema.md) e [contratos municipais](docs/contratos.md). Para mudanças na persistência, consulte [operação com Supabase](docs/supabase.md).
 

@@ -56,6 +56,13 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
           PMPV_API_TOKEN: ${{ secrets.PMPV_API_TOKEN }}
+      - name: Coletar receitas e previsão orçamentária
+        run: npm run sync:revenues
+        env:
+          SUPABASE_REQUIRED: "true"
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          PMPV_API_TOKEN: ${{ secrets.PMPV_API_TOKEN }}
       - name: Exportar a base persistida para o site
         run: npm run data:export
         env:

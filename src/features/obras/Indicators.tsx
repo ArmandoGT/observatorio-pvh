@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { latestWorks } from "@/lib/data";
+import { latestWorks, snapshot } from "@/lib/data";
+import { dateLabel } from "@/lib/display";
 import { FigmaAsset } from "@/components/FigmaAsset";
 
 export function ObrasIndicators() {
@@ -32,7 +33,10 @@ export function ObrasIndicators() {
           </span>
           <div>
             <h2 id="obras-indicators-heading">Obras públicas</h2>
-            <p>{latestWorks.length} registros na base municipal consultada</p>
+            <p>
+              {latestWorks.length} registros · Coleta em{" "}
+              {dateLabel(snapshot.generatedAt)}
+            </p>
           </div>
         </div>
         <Link href="/obras/" className="button button-secondary">

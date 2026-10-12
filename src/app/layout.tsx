@@ -1,8 +1,16 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import { Header, Footer } from "@/components/Chrome";
 import { observatory } from "@/lib/observatory";
 import "./globals.css";
+import "./ux.css";
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#131313",
+  colorScheme: "dark",
+};
 const geist = Geist({
   subsets: ["latin"],
   display: "swap",

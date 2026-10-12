@@ -1,11 +1,10 @@
 "use client";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { FigmaAsset } from "./FigmaAsset";
 
 const tabs = [
-  { id: "visao-geral", label: "Visão Geral e Indicadores", icon: "e72ba.svg" },
-  { id: "medicoes", label: "Histórico e Medições", icon: "3e65c.svg" },
-  { id: "documentos", label: "Contrato e Documentos", icon: "661ec.svg" },
+  { id: "visao-geral", label: "Resumo" },
+  { id: "medicoes", label: "Histórico" },
+  { id: "documentos", label: "Documentos" },
 ];
 export function DetailTabs({
   overview,
@@ -74,7 +73,6 @@ export function DetailTabs({
               }
             }}
           >
-            <FigmaAsset file={tab.icon} />
             {tab.label}
           </button>
         ))}

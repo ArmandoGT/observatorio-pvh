@@ -1,6 +1,6 @@
 {
-  "name": "observatorio-obras-porto-velho",
-  "version": "0.1.0",
+  "name": "observatorio-porto-velho",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -16,6 +16,7 @@
     "test": "tsx --test tests/*.test.ts",
     "sync": "tsx scripts/sync.ts",
     "sync:contracts": "tsx scripts/sync-contracts.ts",
+    "sync:revenues": "tsx scripts/sync-revenues.ts",
     "data:export": "tsx scripts/export-supabase.ts",
     "probe": "node scripts/probe.mjs"
   },

@@ -5,30 +5,32 @@ import { currency, dateLabel, sumKnown } from "@/lib/display";
 import { FigmaAsset } from "@/components/FigmaAsset";
 
 export function ObrasOverview() {
+  return (
+    <article className="module-card" aria-labelledby="obras-heading">
+      <h2 id="obras-heading">{worksModule.title}</h2>
+      <p>Consulte obras, valores informados e documentos oficiais.</p>
+      <small>
+        {latestWorks.length} registros · Coleta em{" "}
+        {dateLabel(snapshot.generatedAt)}
+      </small>
+      <Link href={worksModule.href} className="button">
+        Explorar obras →
+      </Link>
+    </article>
+  );
+}
+
+export function ObrasSummary() {
   const contracted = sumKnown(latestWorks, "contractedCents"),
     paid = sumKnown(latestWorks, "paidCents");
   return (
     <div className="works-overview">
-      <section
-        className="module-intro container"
-        aria-labelledby="obras-heading"
-      >
-        <div className="module-heading">
-          <div>
-            <span className="eyebrow gold-text">MÓDULO DISPONÍVEL</span>
-            <h2 id="obras-heading">{worksModule.title}</h2>
-            <p>{worksModule.description}</p>
-          </div>
-          <Link href={worksModule.href} className="button button-secondary">
-            Explorar obras <FigmaAsset file="6a0f6.svg" />
-          </Link>
-        </div>
-      </section>
       <div className="container">
         <section
           className="overview"
           aria-label="Indicadores da base de obras municipais"
         >
+          <h2 className="summary-heading">A base de obras em números</h2>
           {snapshot.syncStatus === "error" && (
             <div className="notice error" role="alert">
               A última sincronização falhou. A base da última coleta válida foi
@@ -81,7 +83,7 @@ export function ObrasOverview() {
               </strong>{" "}
               · API municipal
             </span>
-            <Link href="/metodologia/">COBERTURA E LIMITAÇÕES</Link>
+            <Link href="/metodologia/#limites">Cobertura e limitações</Link>
           </div>
           <p className="overview-note">
             As somas incluem contratos de diferentes anos. Não representam o

@@ -14,6 +14,7 @@ import { pathToFileURL } from "node:url";
 import { PGlite } from "@electric-sql/pglite";
 import { normalizeWork } from "../src/lib/normalize";
 import type { Snapshot } from "../src/lib/schema";
+import { emptyRevenueSnapshot } from "./fixtures-revenues";
 
 test("coletor e exportação usam o estado persistido e bloqueiam publicação após falha", async () => {
   const root = process.cwd();
@@ -107,6 +108,14 @@ test("coletor e exportação usam o estado persistido e bloqueiam publicação a
             { status: 409 },
           );
         const args = JSON.parse(String(init?.body));
+        if (
+          url.pathname.endsWith("observatory_load_state") &&
+          args.p_module === "receitas-pvh"
+        )
+          return Response.json({
+            revision: 1,
+            snapshot: emptyRevenueSnapshot(baselineAt),
+          });
         if (url.pathname.endsWith("observatory_load_state"))
           return Response.json(
             args.p_module === "contratos-pvh"

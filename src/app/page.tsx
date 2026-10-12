@@ -1,5 +1,6 @@
-import { ObrasOverview } from "@/features/obras/Overview";
+import { ObrasOverview, ObrasSummary } from "@/features/obras/Overview";
 import { ContractsOverview } from "@/features/contratos/Overview";
+import { RevenueOverview } from "@/features/receitas/Overview";
 
 export default function Home() {
   return (
@@ -9,13 +10,19 @@ export default function Home() {
           <em>Porto Velho</em>, em dados.
         </h1>
         <p>
-          Dados públicos com contexto para acompanhar a cidade. Explore as obras
-          municipais e os contratos, confira as fontes e entenda o que cada
-          informação revela.
+          Consulte obras, contratos e receitas municipais, com fontes e
+          contexto.
         </p>
       </section>
-      <ObrasOverview />
-      <ContractsOverview />
+      <section
+        className="container home-modules"
+        aria-label="Explore os dados da cidade"
+      >
+        <ObrasOverview />
+        <ContractsOverview />
+        <RevenueOverview />
+      </section>
+      <ObrasSummary />
     </main>
   );
 }

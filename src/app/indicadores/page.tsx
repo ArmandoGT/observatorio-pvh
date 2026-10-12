@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { snapshot } from "@/lib/data";
-import { dateLabel } from "@/lib/display";
 import { ObrasIndicators } from "@/features/obras/Indicators";
 import { ContractsIndicators } from "@/features/contratos/Indicators";
+import { RevenueIndicators } from "@/features/receitas/Indicators";
 
 export const metadata: Metadata = {
   title: "Indicadores",
   description:
-    "Indicadores dos dados públicos de Porto Velho. Consulte obras e contratos municipais por situação e órgão responsável.",
+    "Indicadores dos dados públicos de Porto Velho. Consulte obras, contratos e receitas municipais, com fontes e cobertura.",
 };
 
 export default function Indicators() {
@@ -15,13 +15,13 @@ export default function Indicators() {
     <main id="conteudo" className="container page-main indicators-page">
       <div className="page-kicker">
         <span>PORTO VELHO/RO · DADOS PÚBLICOS</span>
-        <small>Coleta em {dateLabel(snapshot.generatedAt)}</small>
+        <small>Datas de consulta indicadas por módulo</small>
       </div>
       <h1 className="page-title">Indicadores</h1>
       <p className="page-intro">
         Conheça a distribuição dos registros publicados pela cidade. Comece
-        pelas obras e contratos municipais e consulte as fontes e os limites de
-        cada indicador.
+        pelas obras, contratos e receitas municipais e consulte as fontes e os
+        limites de cada indicador.
       </p>
       {snapshot.syncStatus === "error" && (
         <div className="notice error" role="alert">
@@ -35,6 +35,7 @@ export default function Indicators() {
       )}
       <ObrasIndicators />
       <ContractsIndicators />
+      <RevenueIndicators />
     </main>
   );
 }

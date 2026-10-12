@@ -38,6 +38,15 @@ totais inconsistentes, IDs duplicados ou uma coleta incompleta. Contratos que
 deixam de aparecer são mantidos como históricos, fora dos totais atuais. Se a
 origem falhar, a última base válida permanece intacta e a tentativa fica registrada.
 
+Os coletores de obras e contratos espaçam as chamadas à API municipal em pelo
+menos 1,5 segundo. Cada requisição tem timeout de 15 segundos e até quatro
+tentativas para falhas de rede ou HTTP 429/502/503/504. Em HTTP 429, respeitam
+`Retry-After` em segundos ou data HTTP; sem cabeçalho válido, aguardam 60, 120
+e 240 segundos. Essa cadência é uma precaução do observatório, não um limite
+oficial confirmado da API. Uma espera indicada superior a cinco minutos
+interrompe a coleta, sem antecipar a próxima chamada nem substituir a base.
+Os logs mostram o motivo, a espera e a próxima tentativa.
+
 O módulo `contratos-pvh` usa as tabelas privadas `contract_catalog` e
 `contract_versions`, além de `module_state`, `sources` e `ingestion_runs`.
 As alterações são transacionais, versionadas por hash e protegidas por revisão.

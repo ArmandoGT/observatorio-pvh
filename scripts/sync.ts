@@ -12,6 +12,7 @@ import { snapshotSchema, type Snapshot } from "../src/lib/schema";
 import { normalizeWork, rawWorkSchema, stableHash } from "../src/lib/normalize";
 import { failureSnapshot, mergeWorks, safePageUrl } from "../src/lib/sync-core";
 import { createSnapshotStore } from "./lib/supabase-store";
+import { createSourceRequester } from "./lib/source-request";
 
 const dataDir = resolve("data"),
   snapshotPath = resolve(dataDir, "snapshot.json"),
@@ -36,34 +37,21 @@ async function atomic(path: string, data: unknown) {
   await writeFile(tmp, JSON.stringify(data, null, 2) + "\n");
   await rename(tmp, path);
 }
+const sourceRequest = createSourceRequester();
 async function request(url: string): Promise<Response> {
   const u = new URL(url);
   if (!u.hostname.endsWith(".portovelho.ro.gov.br") || u.protocol !== "https:")
     throw new Error("Origem da requisição não permitida.");
-  for (let attempt = 0; attempt < 3; attempt++) {
-    try {
-      const r = await fetch(url, {
-        headers: {
-          Accept: "application/json",
-          "User-Agent": "ObservatorioObrasPVH/0.1 (+independent civic data)",
-          ...(process.env.PMPV_API_TOKEN &&
-          u.hostname === "api.portovelho.ro.gov.br"
-            ? { Authorization: `Bearer ${process.env.PMPV_API_TOKEN}` }
-            : {}),
-        },
-        signal: AbortSignal.timeout(15000),
-      });
-      if ([429, 502, 503, 504].includes(r.status) && attempt < 2) {
-        await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
-        continue;
-      }
-      return r;
-    } catch (e) {
-      if (attempt === 2) throw e;
-      await new Promise((r) => setTimeout(r, 500 * (attempt + 1)));
-    }
-  }
-  throw new Error("Falha de rede.");
+  return sourceRequest(url, {
+    headers: {
+      Accept: "application/json",
+      "User-Agent": "ObservatorioObrasPVH/0.1 (+independent civic data)",
+      ...(process.env.PMPV_API_TOKEN &&
+      u.hostname === "api.portovelho.ro.gov.br"
+        ? { Authorization: `Bearer ${process.env.PMPV_API_TOKEN}` }
+        : {}),
+    },
+  });
 }
 async function json(url: string) {
   const r = await request(url);
@@ -159,7 +147,6 @@ try {
     } catch {
       failedContracts.add(id);
     }
-    await new Promise((r) => setTimeout(r, 120));
   }
   const before = new Map(previous.works.map((w) => [w.id, w]));
   const normalized = parsed.map((raw) => {

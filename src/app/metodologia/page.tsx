@@ -3,44 +3,122 @@ import type { Metadata } from "next";
 import { ArrowUpRight, CheckCircle2, AlertCircle } from "lucide-react";
 import { snapshot, latestWorks } from "@/lib/data";
 import { contractSnapshot, latestContracts } from "@/features/contratos/data";
+import { revenueSnapshot } from "@/features/receitas/data";
 import { dateLabel } from "@/lib/display";
 import { FigmaAsset } from "@/components/FigmaAsset";
+import { oldWorkCount } from "@/lib/work-presentation";
 export const metadata: Metadata = { title: "Fontes e método" };
 
+function SourceCard({ source }: { source: (typeof snapshot.sources)[number] }) {
+  return (
+    <article className="source-card">
+      <h3>{source.title}</h3>
+      <span
+        className={`source-state ${source.status === "available" ? "ok" : "unavailable"}`}
+      >
+        {source.status === "available" ? (
+          <CheckCircle2 size={16} aria-hidden="true" />
+        ) : (
+          <AlertCircle size={16} aria-hidden="true" />
+        )}
+        {source.status === "available"
+          ? "Acessível na verificação"
+          : source.status === "partial"
+            ? "Consulta parcial"
+            : "Indisponível na verificação"}
+      </span>
+      <dl>
+        <div>
+          <dt>Verificada em</dt>
+          <dd>{dateLabel(source.checkedAt)}</dd>
+        </div>
+        <div>
+          <dt>Frequência da Prefeitura</dt>
+          <dd>{source.updateFrequency}</dd>
+        </div>
+      </dl>
+      {source.status !== "available" && <p>{source.note}</p>}
+      <a
+        className="text-link"
+        href={source.url}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Visitar fonte <ArrowUpRight size={16} aria-hidden="true" />
+      </a>
+      {source.termsUrl && (
+        <a
+          className="text-link"
+          href={source.termsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Regras de uso <ArrowUpRight size={16} aria-hidden="true" />
+        </a>
+      )}
+      <details className="source-technical">
+        <summary>Detalhes técnicos da consulta</summary>
+        {source.httpStatus && <p>Resposta HTTP: {source.httpStatus}</p>}
+        <p>{source.note}</p>
+      </details>
+    </article>
+  );
+}
+
 export default function Method() {
-  const old = latestWorks.filter(
-    (work) =>
-      work.sourceUpdatedAt &&
-      snapshot.generatedAt &&
-      (Date.parse(snapshot.generatedAt) - Date.parse(work.sourceUpdatedAt)) /
-        86400000 >
-        180,
-  ).length;
+  const old = oldWorkCount(latestWorks, snapshot.generatedAt);
   return (
     <main id="conteudo" className="container page-main method-page">
       <header className="method-heading">
-        <h1 className="page-title">
-          Metodologia e Governança <em>de Dados</em>
-        </h1>
+        <h1 className="page-title">Fontes e método</h1>
         <p className="page-intro">
-          Entenda a origem das informações, os processos de compilação, o
-          significado de cada indicador e as limitações das fontes públicas de
-          Porto Velho/RO.
+          Saiba de onde vêm os dados, quando foram consultados e o que eles
+          permitem concluir.
         </p>
-        <div className="method-meta">
-          <span>
-            <FigmaAsset file="9744b.svg" />
-            Base coletada em {dateLabel(snapshot.generatedAt)}
-          </span>
-          <span>
-            <FigmaAsset file="4d5f3.svg" />
-            Dados públicos e fontes rastreáveis
-          </span>
-          <span>
-            <FigmaAsset file="30907.svg" />
-            Atualização diária programada
-          </span>
-        </div>
+        <section
+          className="method-summary"
+          aria-label="Origem, coleta e cobertura"
+        >
+          <dl className="module-collections">
+            <div>
+              <dt>Obras · {latestWorks.length} registros</dt>
+              <dd>Coleta em {dateLabel(snapshot.generatedAt)}</dd>
+            </div>
+            <div>
+              <dt>
+                Contratos · {latestContracts.length.toLocaleString("pt-BR")}
+              </dt>
+              <dd>Coleta em {dateLabel(contractSnapshot.generatedAt)}</dd>
+            </div>
+            <div>
+              <dt>
+                Receitas ·{" "}
+                {revenueSnapshot.years.map((year) => year.year).join(" e ")}
+              </dt>
+              <dd>Coleta em {dateLabel(revenueSnapshot.generatedAt)}</dd>
+            </div>
+          </dl>
+          <p>
+            Os dados vêm dos sistemas e do Portal da Transparência da
+            Prefeitura. O Observatório é uma iniciativa cívica independente.
+          </p>
+          <p>
+            <strong>Coleta recente não significa registro recente.</strong> A
+            frequência de publicação municipal não foi confirmada.
+            {old > 0 && (
+              <>
+                {" "}
+                Na coleta de obras, {old} de {latestWorks.length} registros
+                tinham atualização da fonte há mais de 180 dias.
+              </>
+            )}
+          </p>
+          <p>
+            Os registros disponíveis podem não cobrir todas as obras da cidade.
+            Contratado, pago e percentual informado são medidas diferentes;
+            pagamentos não comprovam avanço físico.
+          </p>
+        </section>
       </header>
 
       <div className="method-accordions">
@@ -59,66 +137,45 @@ export default function Method() {
           </summary>
           <div className="accordion-content">
             <p>
-              A coleta consulta a API de obras, percorre toda a paginação e
-              busca contratos pelo identificador explicitamente vinculado. O
-              catálogo de contratos percorre separadamente todas as páginas do
-              modelo “Contratos”, em todos os anos disponíveis. Obras e
-              contratos são associados somente pelo ID publicado pela fonte.
-              Despesas não são associadas por aproximação de nomes ou valores.
+              A Prefeitura publica os registros em um sistema de dados (API).
+              Consultamos obras e contratos separadamente. Uma obra só é
+              associada ao contrato cujo identificador foi publicado na sua
+              ficha.
             </p>
-            <div className="sources-grid">
-              {[...snapshot.sources, ...contractSnapshot.sources].map(
-                (source) => (
-                  <article className="source-card" key={source.id}>
-                    <h3>{source.title}</h3>
-                    <span
-                      className={`source-state ${source.status === "available" ? "ok" : "unavailable"}`}
-                    >
-                      {source.status === "available" ? (
-                        <CheckCircle2 size={13} />
-                      ) : (
-                        <AlertCircle size={13} />
-                      )}
-                      {source.status === "available"
-                        ? "Acessível"
-                        : source.status === "partial"
-                          ? "Consulta parcial"
-                          : "Indisponível"}
-                      {source.httpStatus ? ` · HTTP ${source.httpStatus}` : ""}
-                    </span>
-                    <p>{source.note}</p>
-                    <dl>
-                      <div>
-                        <dt>Verificada em</dt>
-                        <dd>{dateLabel(source.checkedAt)}</dd>
-                      </div>
-                      <div>
-                        <dt>Atualização</dt>
-                        <dd>{source.updateFrequency}</dd>
-                      </div>
-                    </dl>
-                    <a
-                      className="text-link"
-                      href={source.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Visitar fonte <ArrowUpRight size={13} />
-                    </a>
-                    {source.termsUrl && (
-                      <a
-                        className="text-link"
-                        href={source.termsUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Regras de uso <ArrowUpRight size={13} />
-                      </a>
-                    )}
-                  </article>
-                ),
-              )}
-            </div>
+            <details className="source-technical">
+              <summary>Como os registros são compilados</summary>
+              <p>
+                A coleta percorre todas as páginas da API de obras. O catálogo
+                de contratos percorre todas as páginas do modelo “Contratos”, em
+                todos os anos disponíveis. Obras e contratos são associados
+                somente pelo ID publicado pela fonte. Despesas não são
+                associadas por aproximação de nomes ou valores.
+              </p>
+            </details>
+            <p>
+              O módulo de receitas coleta separadamente previsões anuais e
+              documentos de arrecadação do portal da Prefeitura. Entradas
+              extraorçamentárias não compõem os indicadores de receita
+              orçamentária, e valores negativos são preservados. Consulte os
+              recortes e a cobertura na{" "}
+              <Link href="/receitas/">página de Receitas e orçamento</Link>.
+            </p>
+            {[
+              { title: "Obras", sources: snapshot.sources },
+              { title: "Contratos", sources: contractSnapshot.sources },
+              { title: "Receitas", sources: revenueSnapshot.sources },
+            ].map((group) => (
+              <details className="source-group" key={group.title}>
+                <summary>
+                  {group.title} · {group.sources.length} fontes consultadas
+                </summary>
+                <div className="sources-grid">
+                  {group.sources.map((source) => (
+                    <SourceCard key={source.id} source={source} />
+                  ))}
+                </div>
+              </details>
+            ))}
           </div>
         </details>
         <details className="method-accordion">
@@ -157,7 +214,7 @@ export default function Method() {
                 </p>
               </article>
               <article>
-                <span>3. EXECUÇÃO INFORMADA</span>
+                <span>3. PERCENTUAL INFORMADO PELA FONTE</span>
                 <h2>Percentual da fonte</h2>
                 <p>
                   A fonte não confirma se a execução é física ou financeira.
@@ -293,9 +350,8 @@ export default function Method() {
                 Os valores podem divergir.
               </li>
               <li>
-                Abra os anexos em “Contrato e Documentos” e as medições em
-                “Histórico e Medições”. Ausência de documentos não comprova
-                ausência de execução.
+                Abra os anexos em “Documentos” e as medições em “Histórico”.
+                Ausência de documentos não comprova ausência de execução.
               </li>
               <li>
                 Consulte o registro original antes de formular qualquer
@@ -305,6 +361,18 @@ export default function Method() {
           </div>
         </details>
       </div>
+      <section className="method-about" id="sobre">
+        <h2>Sobre o Observatório</h2>
+        <p>
+          Iniciativa cívica independente, sem vínculo com a administração
+          pública. Apresentamos os registros publicados com suas fontes e
+          limitações. Dados ausentes ou divergentes exigem contexto antes de
+          qualquer conclusão.
+        </p>
+        <Link className="text-link" href="/termos/">
+          Termos de uso
+        </Link>
+      </section>
     </main>
   );
 }

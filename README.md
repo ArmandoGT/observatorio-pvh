@@ -2,6 +2,8 @@
 
 Quer ajudar a melhorar o observatório? Consulte o [guia de contribuição](CONTRIBUTING.md).
 
+O módulo **Receitas e orçamento** está implementado em `/receitas/`, com previsão anual, arrecadação mensal, filtros e acesso a LOA, LDO e PPA. Consulte [o recorte, a coleta e os limites](docs/receitas.md).
+
 O módulo **Contratos municipais** está implementado no código em `/contratos/`,
 com catálogo, fichas estáticas, documentos e vínculos por ID com as obras.
 Consulte [escopo, coleta e validação de contratos](docs/contratos.md).
@@ -37,6 +39,7 @@ O coletor persiste no Supabase, guardando o histórico e exportando a mesma base
 ```sh
 npm run sync
 npm run sync:contracts
+npm run sync:revenues
 npm run build
 ```
 

@@ -15,6 +15,8 @@ import { Status } from "@/components/Status";
 import { FigmaAsset } from "@/components/FigmaAsset";
 import { ShareButton } from "@/components/ShareButton";
 import { DetailTabs } from "@/components/DetailTabs";
+import { BackToWorks } from "@/components/BackToWorks";
+import { workTitle, groupWorkDocuments } from "@/lib/work-presentation";
 
 export const dynamicParams = false;
 export function generateStaticParams() {
@@ -60,11 +62,18 @@ export default async function WorkDetail({
     work.contractId === null
       ? undefined
       : contractsBySourceId.get(work.contractId);
-  const title =
-    work.title === work.title.toUpperCase()
-      ? work.title.charAt(0) + work.title.slice(1).toLowerCase()
-      : work.title;
+  const title = workTitle(work.title);
 
+  const valueDiscrepancy =
+    work.contractedCents !== null &&
+    work.contractValueCents !== null &&
+    work.contractedCents !== work.contractValueCents;
+  const moneyIssues = work.issues.filter((issue) =>
+    /valor|pago|pagamento/i.test(issue),
+  );
+  const dateIssues = work.issues.filter((issue) =>
+    /data|vigência/i.test(issue),
+  );
   const overview = (
     <>
       <div
@@ -73,75 +82,86 @@ export default async function WorkDetail({
       >
         <article className="stat">
           <div className="metric-label">
-            <span>VALOR TOTAL CONTRATADO</span>
-            <FigmaAsset file="8f5b1.svg" />
+            <span>Contratado na ficha da obra</span>
           </div>
           <strong>{currency(work.contractedCents)}</strong>
-          <p>Valor publicado na ficha oficial da obra.</p>
           <div className="metric-footnote">
             Contrato vinculado: {currency(work.contractValueCents)}
           </div>
-        </article>
-        <article className="stat">
-          <div className="metric-label">
-            <span>VALOR PAGO</span>
-            <FigmaAsset file="e2912.svg" />
-          </div>
-          <strong>{currency(work.paidCents)}</strong>
-          <p>Pagamento acumulado informado pela fonte.</p>
-          <div className="metric-footnote">
-            Valor a medir: {currency(work.toMeasureCents)}
-          </div>
-        </article>
-        <article className="stat">
-          <div className="metric-label">
-            <span>EXECUÇÃO INFORMADA</span>
-            <FigmaAsset file="e938f.svg" />
-          </div>
-          <strong className="gold-text">
-            {percentLabel(work.reportedExecutionPercent)}
-          </strong>
-          <p>A fonte não define se o percentual é físico ou financeiro.</p>
-          {work.reportedExecutionPercent !== null ? (
-            <div
-              className="progress-track"
-              role="meter"
-              aria-label="Execução informada pela fonte"
-              aria-valuenow={work.reportedExecutionPercent}
-              aria-valuemin={0}
-              aria-valuemax={100}
-            >
-              <span style={{ width: `${work.reportedExecutionPercent}%` }} />
-            </div>
-          ) : (
-            <div className="metric-footnote">
-              Ausência de dado não equivale a 0%.
+          {valueDiscrepancy && (
+            <div className="inline-context">
+              <p>
+                <strong>Os valores publicados são diferentes.</strong> A ficha
+                da obra e o contrato vinculado informam valores distintos. Ambos
+                são preservados.
+              </p>
+              <p>
+                <a
+                  href={work.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Ver ficha original
+                </a>
+                {work.contractSourceUrl && (
+                  <>
+                    {" "}
+                    ·{" "}
+                    <a
+                      href={work.contractSourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Ver contrato original
+                    </a>
+                  </>
+                )}
+              </p>
             </div>
           )}
         </article>
+        <article className="stat">
+          <div className="metric-label">
+            <span>Pago na ficha da obra</span>
+          </div>
+          <strong>{currency(work.paidCents)}</strong>
+          <p>Pagamento acumulado informado pela Prefeitura.</p>
+          <div className="metric-footnote">
+            Valor a medir informado: {currency(work.toMeasureCents)}
+          </div>
+          {moneyIssues
+            .filter((issue) => !/contrato vinculado/i.test(issue))
+            .map((issue, index) => (
+              <div className="inline-context" key={index}>
+                <p>{issue}</p>
+              </div>
+            ))}
+        </article>
       </div>
-      <section className="explainer-banner">
-        <span className="icon-box">
-          <FigmaAsset file="30f20.svg" />
-        </span>
-        <div>
-          <h2>COMO FUNCIONA O ACOMPANHAMENTO PÚBLICO?</h2>
-          <p>
-            Contratado, pago e executado são medidas diferentes. Não calculamos
-            execução física a partir dos pagamentos. Confira as medições e os
-            documentos originais.
-          </p>
-        </div>
-        <a className="text-link" href="#medicoes">
-          Ver histórico de medições <FigmaAsset file="419d1.svg" />
-        </a>
+      <section
+        className="reported-percent"
+        aria-label="Percentual informado pela fonte"
+      >
+        <strong>
+          Percentual informado pela fonte:{" "}
+          {percentLabel(work.reportedExecutionPercent)}
+        </strong>
+        <p>
+          A Prefeitura não define se esse percentual é físico ou financeiro. Ele
+          não comprova o avanço físico da obra.
+          {work.reportedExecutionPercent === null &&
+            " Ausência de dado não equivale a 0%."}{" "}
+          <a className="text-link" href="#medicoes">
+            Ver medições
+          </a>
+        </p>
       </section>
       <div className="detail-grid">
         <section className="surface-card work-summary">
-          <h2 className="accent-heading">Resumo da Obra e Locais Publicados</h2>
+          <h2>Sobre esta obra</h2>
           <dl className="summary-facts">
             <div>
-              <dt>EMPRESA CONTRATADA</dt>
+              <dt>Empresa contratada</dt>
               <dd>
                 {work.supplier ?? "Não informada"}
                 {work.supplierDocument && (
@@ -150,77 +170,52 @@ export default async function WorkDetail({
               </dd>
             </div>
             <div>
-              <dt>VIGÊNCIA DO CONTRATO</dt>
-              <dd className="gold-text">
+              <dt>Fim da vigência do contrato</dt>
+              <dd>
                 {dateLabel(work.contractEndsAt)}
                 <small>Início da obra: {dateLabel(work.startedAt)}</small>
               </dd>
             </div>
-            <div>
-              <dt>ÓRGÃO RESPONSÁVEL</dt>
-              <dd>{work.organizationName ?? "Não informado"}</dd>
-            </div>
-            <div>
-              <dt>PROCESSO</dt>
-              <dd>{work.process ?? "Não informado"}</dd>
-            </div>
           </dl>
-          <h3 className="small-label">LOCAIS INFORMADOS NA FONTE:</h3>
-          <div className="location-tags">
-            {work.locations.length ? (
-              work.locations.map((location) => (
-                <span key={location}>
-                  <span className="gold-dot" />
-                  {location}
-                </span>
-              ))
-            ) : (
-              <p>Localização não informada.</p>
-            )}
-          </div>
+          {dateIssues.length > 0 && (
+            <div className="inline-context">
+              {dateIssues.map((issue, index) => (
+                <p key={index}>{issue}</p>
+              ))}
+              <a className="text-link" href="#medicoes">
+                Conferir as datas publicadas
+              </a>
+            </div>
+          )}
           {work.observation && (
             <div className="official-observation">
-              <h3 className="small-label">OBSERVAÇÃO OFICIAL:</h3>
+              <h3>Observação da Prefeitura</h3>
               <p>{work.observation}</p>
             </div>
           )}
-          <div className="field-records">
-            <h3 className="small-label">REGISTROS DE CAMPO:</h3>
+          <p className="field-records">
+            A base não fornece fotografias de campo nem execução física
+            verificada para este registro.
+          </p>
+          <details className="integrity-details">
+            <summary>Todas as observações deste registro</summary>
+            <ul className="issue-list">
+              {work.issues.map((issue, index) => (
+                <li key={index}>{issue}</li>
+              ))}
+            </ul>
             <p>
-              A base consultada não fornece fotografias de campo nem execução
-              física verificada para este registro.
+              As observações indicam limitações ou divergências nos campos, sem
+              constituir alegação de irregularidade.
             </p>
-          </div>
+          </details>
         </section>
         <aside className="detail-sidebar">
-          <section className="surface-card location-card">
-            <div className="card-heading">
-              <h2 className="small-label">LOCALIZAÇÃO PUBLICADA</h2>
-              <FigmaAsset file="63956.svg" />
-            </div>
-            <div className="location-panel">
-              {work.locations.length ? (
-                work.locations.map((location) => (
-                  <p key={location}>{location}</p>
-                ))
-              ) : (
-                <p>Não informada na fonte.</p>
-              )}
-              <small>
-                Bairro padronizado: {work.neighborhood ?? "não disponível"}
-                <br />A fonte não fornece coordenadas verificadas para exibir um
-                mapa.
-              </small>
-            </div>
-          </section>
           <section className="surface-card source-box">
-            <h2>
-              <FigmaAsset file="53414.svg" />
-              Consulta cidadã
-            </h2>
+            <h2>Conferir na Prefeitura</h2>
             <p>
-              Confira os registros e anexos oficiais. Dados ausentes ou
-              divergentes exigem contexto antes de qualquer conclusão.
+              Consulte o registro e os documentos oficiais para interpretar
+              dados ausentes ou divergentes.
             </p>
             <a
               className="button button-secondary"
@@ -228,37 +223,14 @@ export default async function WorkDetail({
               target="_blank"
               rel="noopener noreferrer"
             >
-              Consultar registro original <ArrowUpRight size={14} />
+              Ver registro original{" "}
+              <ArrowUpRight size={16} aria-hidden="true" />
             </a>
             <Link className="text-link" href="/metodologia/#limites">
-              Conheça os limites da base
+              Conheça a cobertura e os limites
             </Link>
           </section>
         </aside>
-      </div>
-      <section className="surface-card limitations-card">
-        <h2 className="accent-heading">Leia com contexto</h2>
-        <ul className="issue-list">
-          {work.issues.map((issue, index) => (
-            <li key={index}>{issue}</li>
-          ))}
-        </ul>
-        <p>
-          As observações indicam limitações ou divergências nos campos, sem
-          constituir alegação de irregularidade.
-        </p>
-      </section>
-      <div className="explainer-banner legal-banner">
-        <span className="icon-box">
-          <FigmaAsset file="aeaa4.svg" />
-        </span>
-        <p>
-          Dados públicos extraídos da API municipal de Porto Velho. Iniciativa
-          cívica independente, com origem e limitações rastreáveis.
-        </p>
-        <Link className="button button-secondary" href="/metodologia/#sobre">
-          Sobre o Observatório
-        </Link>
       </div>
     </>
   );
@@ -303,6 +275,10 @@ export default async function WorkDetail({
           </div>
         </dl>
         <h2 className="accent-heading">Medições publicadas</h2>
+        <p>
+          Valores e datas de pagamento informados pela Prefeitura. Uma medição é
+          um registro de avaliação dos serviços da obra.
+        </p>
         {work.measurements.length ? (
           <div className="table-scroll">
             <table>
@@ -335,7 +311,7 @@ export default async function WorkDetail({
         )}
       </div>
       <aside className="surface-card">
-        <h2>Rastreabilidade da coleta</h2>
+        <h2>Datas da consulta</h2>
         <dl className="facts">
           <div>
             <dt>Primeira coleta</dt>
@@ -427,7 +403,7 @@ export default async function WorkDetail({
           </a>
         )}
         <details className="integrity-details">
-          <summary>Identificador e integridade</summary>
+          <summary>Detalhes técnicos do registro</summary>
           <p>ID da fonte: {work.sourceId}</p>
           <code>{work.contentHash}</code>
         </details>
@@ -439,29 +415,37 @@ export default async function WorkDetail({
           <span>{work.documents.length}</span>
         </div>
         {work.documents.length ? (
-          <ul>
-            {work.documents.map((document) => (
-              <li key={document.url}>
-                <a
-                  href={document.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <span>
-                    <small>
-                      {document.kind === "obra"
-                        ? "OBRA"
-                        : document.kind === "contrato"
-                          ? "CONTRATO"
-                          : "MEDIÇÃO"}
-                    </small>
-                    {document.title}
-                  </span>
-                  <ArrowUpRight size={16} />
-                </a>
-              </li>
+          <div>
+            {groupWorkDocuments(work.documents).map((group) => (
+              <section className="document-group" key={group.title}>
+                <h3>{group.title}</h3>
+                <ul>
+                  {group.documents.map((document, index) => (
+                    <li key={document.url + index}>
+                      <a
+                        href={document.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <span>
+                          <small>
+                            Origem:{" "}
+                            {document.kind === "contrato"
+                              ? "registro do contrato"
+                              : document.kind === "medicao"
+                                ? "medição da obra"
+                                : "ficha da obra"}
+                          </small>
+                          {document.title}
+                        </span>
+                        <ArrowUpRight size={16} aria-hidden="true" />
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </section>
             ))}
-          </ul>
+          </div>
         ) : (
           <p>Nenhum documento vinculado disponível na API.</p>
         )}
@@ -478,10 +462,7 @@ export default async function WorkDetail({
       <div className="detail-context">
         <div className="container">
           <div className="detail-breadcrumb">
-            <Link href="/obras/">
-              <FigmaAsset file="7b963.svg" />
-              EXPLORAR OBRAS
-            </Link>
+            <BackToWorks />
             <span>/</span>
             <span>PORTO VELHO · REGISTRO {work.sourceId}</span>
             <span className="contract-reference">
@@ -495,23 +476,46 @@ export default async function WorkDetail({
                 <span className="category">
                   {work.category ?? "OBRA MUNICIPAL"}
                 </span>
-                <span className="source-updated">
-                  <FigmaAsset file="2b588.svg" />
-                  Atualizado na fonte em {dateLabel(work.sourceUpdatedAt)}
-                </span>
               </div>
               <h1>{title}</h1>
-              <p>
-                {work.organizationName ?? "Órgão não informado"} · Coletado em{" "}
-                {dateLabel(work.collectedAt)} ·{" "}
-                {freshness(work, snapshot.generatedAt ?? work.collectedAt)}
+              <p className="detail-location">
+                {work.locations.length
+                  ? work.locations.join(" · ")
+                  : "Localização não informada"}
               </p>
+              <p>
+                {work.organizationName ??
+                  work.organization ??
+                  "Responsável não informado"}
+              </p>
+              <dl className="work-dates">
+                <div>
+                  <dt>Atualizado pela Prefeitura</dt>
+                  <dd>
+                    {dateLabel(work.sourceUpdatedAt)}
+                    {freshness(
+                      work,
+                      snapshot.generatedAt ?? work.collectedAt,
+                    ) === "Registro com mais de 180 dias" && (
+                      <small>Há mais de 180 dias na data da coleta</small>
+                    )}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Consultado pelo Observatório</dt>
+                  <dd>{dateLabel(work.collectedAt)}</dd>
+                </div>
+              </dl>
+              <details className="official-object">
+                <summary>Objeto oficial completo</summary>
+                <p>{work.title}</p>
+              </details>
             </div>
             <div className="detail-actions">
               <ShareButton title={title} />
               <a href="#documentos" className="button button-soft">
                 <FigmaAsset file="1d799.svg" />
-                Auditar Documentos
+                Ver documentos oficiais
               </a>
             </div>
           </div>

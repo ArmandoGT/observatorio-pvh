@@ -16,8 +16,9 @@ import { PGlite } from "@electric-sql/pglite";
 import { contractSnapshotSchema } from "../src/features/contratos/schema";
 import { createContractStore } from "../scripts/lib/contract-store";
 import { normalizeWork } from "../src/lib/normalize";
+import { emptyRevenueSnapshot } from "./fixtures-revenues";
 
-test("contratos: coleta paginada, persistência, falha parcial, histórico e permissões", async () => {
+test("contratos: coleta paginada, limite HTTP 429, persistência, falha parcial, histórico e permissões", async () => {
   const root = process.cwd();
   const folder = await mkdtemp(join(tmpdir(), "pvh-contracts-"));
   const db = await PGlite.create();
@@ -30,6 +31,7 @@ test("contratos: coleta paginada, persistência, falha parcial, histórico e per
   };
   let incomplete = false;
   let changed = false;
+  let rateLimitedCalls = 3;
   const save = async (args: Record<string, unknown>) =>
     Number(
       (
@@ -83,6 +85,14 @@ test("contratos: coleta paginada, persistência, falha parcial, histórico e per
       );
       if (url.hostname === "contracts-test.supabase.co") {
         const args = JSON.parse(String(init?.body));
+        if (
+          url.pathname.endsWith("observatory_load_state") &&
+          args.p_module === "receitas-pvh"
+        )
+          return Response.json({
+            revision: 1,
+            snapshot: emptyRevenueSnapshot("2026-10-11T10:00:00Z"),
+          });
         if (url.pathname.endsWith("observatory_load_state"))
           return Response.json(
             args.p_module === "contratos-pvh"
@@ -120,6 +130,11 @@ test("contratos: coleta paginada, persistência, falha parcial, histórico e per
       assert.equal(url.hostname, "api.portovelho.ro.gov.br");
       assert.equal(url.pathname, "/api/v1/contratos");
       assert.equal(url.searchParams.get("modelo"), "Contratos");
+      if (rateLimitedCalls-- > 0)
+        return new Response(null, {
+          status: 429,
+          headers: { "Retry-After": "0" },
+        });
       const second = url.searchParams.get("page") === "2";
       const id = second ? 2 : 1;
       return Response.json({
@@ -181,6 +196,16 @@ test("contratos: coleta paginada, persistência, falha parcial, histórico e per
       ),
       4,
     );
+    rateLimitedCalls = 4;
+    await run();
+    assert.equal(process.exitCode, 1);
+    process.exitCode = originalExitCode;
+    const limited = (await store.load()).snapshot!;
+    assert.equal(limited.syncStatus, "error");
+    assert.match(limited.syncError!, /HTTP 429/);
+    assert.deepEqual(limited.contracts, state.snapshot!.contracts);
+    assert.equal(limited.generatedAt, state.snapshot!.generatedAt);
+    rateLimitedCalls = 0;
     incomplete = true;
     await run();
     assert.equal(process.exitCode, 1);
@@ -204,14 +229,14 @@ test("contratos: coleta paginada, persistência, falha parcial, histórico e per
     });
     const args = {
       p_module: "contratos-pvh",
-      p_expected_revision: 4,
+      p_expected_revision: 5,
       p_run_id: randomUUID(),
       p_kind: "sync",
       p_started_at: failed.lastAttemptAt,
       p_snapshot: failed,
     };
-    assert.equal(await save(args), 5);
-    assert.equal(await save(args), 5); // same run is idempotent
+    assert.equal(await save(args), 6);
+    assert.equal(await save(args), 6); // same run is idempotent
     assert.equal(
       (
         await db.query<{ full: boolean }>(
@@ -221,14 +246,14 @@ test("contratos: coleta paginada, persistência, falha parcial, histórico e per
       false,
     );
     await assert.rejects(
-      save({ ...args, p_run_id: randomUUID(), p_expected_revision: 4 }),
+      save({ ...args, p_run_id: randomUUID(), p_expected_revision: 5 }),
       /revision conflict/,
     );
     await assert.rejects(
       save({
         ...args,
         p_run_id: randomUUID(),
-        p_expected_revision: 5,
+        p_expected_revision: 6,
         p_snapshot: { ...failed, contracts: [] },
       }),
       /preserve previous/,

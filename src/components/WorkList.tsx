@@ -1,21 +1,24 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import { Eye, FileSearch, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { FileSearch, Search, X } from "lucide-react";
 import type { Work } from "@/lib/schema";
-import { contractLabel, currency, percentLabel } from "@/lib/display";
+import { currency, dateLabel, percentLabel } from "@/lib/display";
+import { sentenceCase, workTitle } from "@/lib/work-presentation";
 import {
   defaultFilters,
-  filterQuery,
   filterWorks,
   readFilters,
   type Filters,
 } from "@/lib/work-filters";
+import {
+  WORK_POSITION_KEY,
+  WORK_RESTORE_KEY,
+  readWorkPage,
+  rememberWorkPosition,
+  worksUrl,
+} from "@/lib/work-navigation";
 import { Status } from "./Status";
-import { FigmaAsset } from "./FigmaAsset";
-
-const labelTitle = (s: string) =>
-  s === s.toUpperCase() ? s.charAt(0) + s.slice(1).toLowerCase() : s;
 
 export function WorkList({
   works,
@@ -24,47 +27,38 @@ export function WorkList({
   works: Work[];
   home?: boolean;
 }) {
-  const [filters, setFilters] = useState<Filters>(defaultFilters),
-    [page, setPage] = useState(1);
-  useEffect(() => {
-    if (home) return;
-    const read = () => {
-      setFilters(readFilters(window.location.search));
-      setPage(1);
-    };
-    read();
-    window.addEventListener("popstate", read);
-    return () => window.removeEventListener("popstate", read);
-  }, [home]);
-  const statuses = [...new Set(works.map((w) => w.status))].sort();
-  const orgs = [
-    ...new Set(
-      works.map((w) => w.organization).filter((s): s is string => !!s),
-    ),
-  ].sort();
-  const neighborhoods = [
-    ...new Set(
-      works.map((w) => w.neighborhood).filter((s): s is string => !!s),
-    ),
-  ].sort();
-  const update = (patch: Partial<Filters>) => {
-    const next = { ...filters, ...patch };
-    setFilters(next);
-    setPage(1);
-    const query = filterQuery(next);
-    window.history.replaceState(
-      null,
-      "",
-      `${window.location.pathname}${query ? "?" + query : ""}`,
-    );
-  };
+  const [filters, setFilters] = useState<Filters>(defaultFilters);
+  const [page, setPage] = useState(1);
+  const [ready, setReady] = useState(false);
+  const restore = useRef<{ url: string; y: number } | null>(null);
+  const results = useRef<HTMLDivElement>(null);
   const filtered = useMemo(
     () => (home ? works : filterWorks(works, filters)),
     [works, filters, home],
   );
-  const limit = home ? 5 : 12,
-    pages = Math.ceil(filtered.length / limit),
-    shown = filtered.slice((page - 1) * limit, page * limit);
+  const limit = home ? 5 : 12;
+  const pages = Math.max(1, Math.ceil(filtered.length / limit));
+  const currentPage = Math.min(page, pages);
+  const shown = filtered.slice((currentPage - 1) * limit, currentPage * limit);
+  const listUrl = worksUrl(filters, currentPage);
+  const statuses = [...new Set(works.map((work) => work.status))].sort();
+  const organizations = [
+    ...new Map(
+      works
+        .filter((work) => work.organization)
+        .map((work) => [
+          work.organization!,
+          work.organizationName ?? work.organization!,
+        ]),
+    ).entries(),
+  ].sort((a, b) => a[1].localeCompare(b[1], "pt-BR"));
+  const neighborhoods = [
+    ...new Set(
+      works
+        .map((work) => work.neighborhood)
+        .filter((value): value is string => !!value),
+    ),
+  ].sort();
   const active = !!(
     filters.q ||
     filters.status ||
@@ -73,6 +67,69 @@ export function WorkList({
     filters.sort !== "updated"
   );
 
+  useEffect(() => {
+    if (home) {
+      setReady(true);
+      return;
+    }
+    const read = () => {
+      setFilters(readFilters(window.location.search));
+      setPage(readWorkPage(window.location.search));
+      setReady(true);
+    };
+    try {
+      const saved = JSON.parse(
+        sessionStorage.getItem(WORK_POSITION_KEY) ?? "null",
+      );
+      const target = sessionStorage.getItem(WORK_RESTORE_KEY);
+      if (
+        saved &&
+        saved.url === target &&
+        target === window.location.pathname + window.location.search &&
+        Number.isFinite(saved.y) &&
+        saved.y >= 0
+      )
+        restore.current = saved;
+      sessionStorage.removeItem(WORK_RESTORE_KEY);
+    } catch {
+      /* Filters do not depend on browser storage. */
+    }
+    read();
+    window.addEventListener("popstate", read);
+    return () => window.removeEventListener("popstate", read);
+  }, [home]);
+
+  useEffect(() => {
+    if (!ready || !restore.current || restore.current.url !== listUrl) return;
+    const y = restore.current.y;
+    let second = 0;
+    const first = requestAnimationFrame(() => {
+      second = requestAnimationFrame(() => {
+        window.scrollTo({ top: y, behavior: "instant" });
+        restore.current = null;
+      });
+    });
+    return () => {
+      cancelAnimationFrame(first);
+      cancelAnimationFrame(second);
+    };
+  }, [ready, listUrl]);
+
+  function update(patch: Partial<Filters>) {
+    const next = { ...filters, ...patch };
+    setFilters(next);
+    setPage(1);
+    window.history.replaceState(null, "", worksUrl(next));
+  }
+  function changePage(next: number) {
+    setPage(next);
+    window.history.replaceState(null, "", worksUrl(filters, next));
+    results.current?.focus({ preventScroll: true });
+    results.current?.scrollIntoView({ block: "start", behavior: "instant" });
+  }
+  const detailHref = (work: Work) =>
+    `/obras/${work.id}/?from=${encodeURIComponent(listUrl)}`;
+
   return (
     <section
       className={`work-list ${home ? "recent-works" : "catalog-works"}`}
@@ -80,349 +137,324 @@ export function WorkList({
       aria-label="Consulta de obras"
     >
       {!home && (
-        <div className="search-panel">
+        <div className="search-panel work-search">
           <label className="search-field">
-            <FigmaAsset file="a4191.svg" />
-            <span className="sr-only">
-              Buscar por obra, localização, contrato, fornecedor ou órgão
-            </span>
+            <Search size={20} aria-hidden="true" />
+            <span className="sr-only">Buscar obra ou localização</span>
             <input
-              value={filters.q}
-              onChange={(e) => update({ q: e.target.value })}
-              onKeyDown={(e) => {
-                if (e.key === "Escape") update({ q: "" });
-              }}
-              placeholder="Buscar por nome da obra, contrato, local ou empreiteira..."
               type="search"
+              value={filters.q}
+              placeholder="Buscar obra ou localização"
+              enterKeyHint="search"
+              aria-describedby="work-search-help"
+              onChange={(event) => update({ q: event.target.value })}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") update({ q: "" });
+              }}
             />
-            <kbd>ESC</kbd>
-          </label>
-          <div className="filter-row">
-            <div className="filter-selects">
-              <label className="select-wrap">
-                <span className="sr-only">Situação</span>
-                <select
-                  value={filters.status}
-                  onChange={(e) => update({ status: e.target.value })}
-                >
-                  <option value="">Situação: Todas</option>
-                  {statuses.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
-                <FigmaAsset file="82f2d.svg" />
-              </label>
-              <label
-                className="select-wrap"
-                title={
-                  !neighborhoods.length
-                    ? "A fonte não oferece bairro padronizado. Use a busca por localização."
-                    : undefined
-                }
-              >
-                <span className="sr-only">Bairro</span>
-                <select
-                  value={filters.neighborhood}
-                  disabled={!neighborhoods.length}
-                  onChange={(e) => update({ neighborhood: e.target.value })}
-                >
-                  <option value="">
-                    {neighborhoods.length
-                      ? "Bairro: Todos"
-                      : "Bairro: Indisponível"}
-                  </option>
-                  {neighborhoods.map((name) => (
-                    <option key={name}>{name}</option>
-                  ))}
-                </select>
-                <FigmaAsset file="82f2d.svg" />
-              </label>
-              <label className="select-wrap">
-                <span className="sr-only">Órgão responsável</span>
-                <select
-                  value={filters.org}
-                  disabled={!orgs.length}
-                  onChange={(e) => update({ org: e.target.value })}
-                >
-                  <option value="">Órgão: Todos</option>
-                  {orgs.map((org) => (
-                    <option key={org}>{org}</option>
-                  ))}
-                </select>
-                <FigmaAsset file="82f2d.svg" />
-              </label>
-              {active && (
-                <button
-                  className="clear-button"
-                  onClick={() => update(defaultFilters)}
-                >
-                  <X size={13} />
-                  Limpar filtros
-                </button>
-              )}
-            </div>
-            <div
-              className="status-filters"
-              aria-label="Filtros rápidos por situação"
-            >
+            {filters.q && (
               <button
-                aria-pressed={!filters.status}
-                onClick={() => update({ status: "" })}
+                type="button"
+                className="search-clear"
+                aria-label="Limpar busca"
+                onClick={() => update({ q: "" })}
               >
-                Todas ({works.length})
+                <X size={18} aria-hidden="true" />
               </button>
-              {statuses.map((status) => (
-                <button
-                  key={status}
-                  aria-pressed={filters.status === status}
-                  onClick={() => update({ status })}
-                >
-                  {status} ({works.filter((w) => w.status === status).length})
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="results-bar">
-            <span role="status" aria-live="polite">
-              <span className="gold-dot" />
-              Exibindo <strong>{filtered.length}</strong>{" "}
-              {filtered.length === 1 ? "obra" : "obras"}
-            </span>
-            <label className="sort-select">
-              Ordenar:
+            )}
+          </label>
+          <p id="work-search-help" className="search-help">
+            Também busca contratos e empresas. Ex.: Flamboyant ou União
+            Bandeirantes.
+          </p>
+          <div className="work-filter-controls">
+            <label className="work-filter">
+              <span>Situação</span>
               <select
-                aria-label="Ordenação"
-                value={filters.sort}
-                onChange={(e) => update({ sort: e.target.value })}
+                value={filters.status}
+                onChange={(event) => update({ status: event.target.value })}
               >
-                <option value="updated">Atualização da fonte</option>
-                <option value="value">Maior valor contratado</option>
-                <option value="name">Nome da obra</option>
+                <option value="">Todas as situações</option>
+                {statuses.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
               </select>
-              <FigmaAsset file="62026.svg" />
             </label>
+            <details className="more-filters">
+              <summary>
+                Mais filtros
+                {filters.org || filters.neighborhood ? " · ativos" : ""}
+              </summary>
+              <div className="more-filters-content">
+                <label className="work-filter">
+                  <span>Secretaria responsável</span>
+                  <select
+                    value={filters.org}
+                    onChange={(event) => update({ org: event.target.value })}
+                  >
+                    <option value="">Todas as secretarias</option>
+                    {organizations.map(([code, name]) => (
+                      <option key={code} value={code}>
+                        {name === code
+                          ? `${code} — nome não informado`
+                          : `${name} (${code})`}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {neighborhoods.length > 0 && (
+                  <label className="work-filter">
+                    <span>Bairro</span>
+                    <select
+                      value={filters.neighborhood}
+                      onChange={(event) =>
+                        update({ neighborhood: event.target.value })
+                      }
+                    >
+                      <option value="">Todos os bairros</option>
+                      {neighborhoods.map((name) => (
+                        <option key={name}>{name}</option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+                {!neighborhoods.length && (
+                  <p className="search-help">
+                    A Prefeitura não publica bairros padronizados nesta base.
+                    Busque bairros e distritos pelo nome.
+                  </p>
+                )}
+              </div>
+            </details>
+            {active && (
+              <button
+                type="button"
+                className="clear-button"
+                onClick={() => update(defaultFilters)}
+              >
+                Limpar todos os filtros
+              </button>
+            )}
           </div>
         </div>
       )}
-      {shown.length ? (
-        <div className="works-table-card">
-          <div
-            className="table-scroll"
-            tabIndex={0}
-            role="region"
-            aria-label="Tabela de obras; role horizontalmente em telas pequenas"
-          >
-            <table
-              className={`works-table ${home ? "compact-table" : "catalog-table"}`}
-            >
-              <caption className="sr-only">
-                {home
-                  ? "Cinco obras mais recentemente atualizadas na fonte"
-                  : "Obras da base municipal que correspondem aos filtros"}
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">
-                    {home ? "OBRA / PROJETO" : "OBRA E DETALHES"}
-                  </th>
-                  <th scope="col">
-                    {home ? "LOCALIZAÇÃO" : "ÓRGÃO E LOCALIZAÇÃO"}
-                  </th>
-                  <th scope="col" className={home ? "" : "numeric"}>
-                    {home ? "ÓRGÃO" : "CONTRATADO / PAGO"}
-                  </th>
-                  <th scope="col" className={home ? "numeric" : ""}>
-                    {home ? "VALOR CONTRATADO" : "EXECUÇÃO INFORMADA"}
-                  </th>
-                  <th scope="col" className="center">
-                    SITUAÇÃO
-                  </th>
-                  <th scope="col" className="action-column">
-                    AÇÃO
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {shown.map((work) => (
-                  <tr key={work.id}>
-                    <th scope="row">
-                      <Link className="work-title" href={`/obras/${work.id}/`}>
-                        {home && (
-                          <span
-                            className={`work-dot ${/finalizada|concluída/i.test(work.status) ? "finished" : ""}`}
-                          />
-                        )}
-                        {labelTitle(work.title)}
-                      </Link>
-                      <div className="work-subtitle">
-                        {contractLabel(work.contractNumber)}
-                        {!home && work.supplier && (
-                          <span> · {work.supplier}</span>
-                        )}
-                      </div>
-                    </th>
-                    <td>
-                      {!home && (
-                        <strong className="organization-name">
-                          {work.organization ?? "Não informado"}
-                        </strong>
-                      )}
-                      <span className="location-text">
-                        {work.locations[0]
-                          ? labelTitle(work.locations[0])
-                          : "Localização não informada"}
-                      </span>
-                    </td>
-                    <td className={home ? "" : "numeric"}>
-                      {home ? (
-                        <span className="org-badge">
-                          {work.organization ?? "Não informado"}
-                        </span>
-                      ) : (
-                        <>
+      <div
+        ref={results}
+        id="resultados-obras"
+        tabIndex={-1}
+        className="works-results"
+      >
+        {!home && (
+          <div className="results-bar">
+            <span role="status" aria-live="polite">
+              {filtered.length}{" "}
+              {filtered.length === 1 ? "obra encontrada" : "obras encontradas"}
+            </span>
+            <label className="work-sort">
+              Ordenar
+              <select
+                aria-label="Ordenação"
+                value={filters.sort}
+                onChange={(event) => update({ sort: event.target.value })}
+              >
+                <option value="updated">Atualização da Prefeitura</option>
+                <option value="value">Maior valor contratado</option>
+                <option value="name">Nome da obra</option>
+              </select>
+            </label>
+          </div>
+        )}
+        {shown.length ? (
+          <>
+            <div className="works-table-card desktop-works">
+              <div
+                className="table-scroll"
+                tabIndex={0}
+                role="region"
+                aria-label="Tabela de obras"
+              >
+                <table className="works-table catalog-table">
+                  <caption className="sr-only">
+                    Obras da base municipal que correspondem à consulta
+                  </caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Obra</th>
+                      <th scope="col">Local e responsável</th>
+                      <th scope="col" className="numeric">
+                        Contratado / pago
+                      </th>
+                      <th scope="col">Situação</th>
+                      <th scope="col">Percentual da fonte</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {shown.map((work) => (
+                      <tr key={work.id}>
+                        <th scope="row">
+                          <Link
+                            className="work-title"
+                            href={detailHref(work)}
+                            onClick={rememberWorkPosition}
+                          >
+                            {workTitle(work.title)}
+                          </Link>
+                          <small className="work-updated">
+                            Atualizado pela Prefeitura:{" "}
+                            {dateLabel(work.sourceUpdatedAt)}
+                          </small>
+                        </th>
+                        <td>
+                          <span className="location-text">
+                            {work.locations[0]
+                              ? sentenceCase(work.locations[0])
+                              : "Localização não informada"}
+                          </span>
+                          <small className="work-organization">
+                            {work.organizationName ??
+                              work.organization ??
+                              "Responsável não informado"}
+                          </small>
+                        </td>
+                        <td className="numeric">
                           <span className="money">
                             {currency(work.contractedCents)}
                           </span>
                           <small className="paid-value">
                             Pago: {currency(work.paidCents)}
                           </small>
-                        </>
-                      )}
-                    </td>
-                    <td className={home ? "numeric" : ""}>
-                      {home ? (
-                        <span className="money">
-                          {currency(work.contractedCents)}
-                        </span>
-                      ) : (
-                        <>
-                          <div className="progress-header">
-                            <strong>
-                              {percentLabel(work.reportedExecutionPercent)}
-                            </strong>
-                          </div>
-                          {work.reportedExecutionPercent !== null ? (
-                            <div
-                              className="progress-track"
-                              role="meter"
-                              aria-label={`Execução informada: ${work.title}`}
-                              aria-valuenow={work.reportedExecutionPercent}
-                              aria-valuemin={0}
-                              aria-valuemax={100}
-                            >
-                              <span
-                                style={{
-                                  width: `${work.reportedExecutionPercent}%`,
-                                }}
-                              />
-                            </div>
-                          ) : (
-                            <small className="progress-unavailable">
-                              Sem percentual na API
-                            </small>
-                          )}
-                        </>
-                      )}
-                    </td>
-                    <td className="center">
-                      <Status value={work.status} />
-                    </td>
-                    <td className="action-column">
-                      <Link
-                        className={home ? "text-link" : "row-button"}
-                        href={`/obras/${work.id}/`}
-                        aria-label={`Ver detalhes: ${work.title}`}
-                        title={home ? undefined : "Ver detalhes da obra"}
-                      >
-                        {home ? (
-                          <>
-                            Ver detalhes
-                            <FigmaAsset file="e2b85.svg" />
-                          </>
-                        ) : (
-                          <Eye size={20} aria-hidden="true" />
-                        )}
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                        </td>
+                        <td>
+                          <Status value={work.status} />
+                        </td>
+                        <td>
+                          <span>
+                            {percentLabel(work.reportedExecutionPercent)}
+                          </span>
+                          <small className="percent-context">
+                            Definição não confirmada
+                          </small>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <ul className="mobile-works">
+              {shown.map((work) => (
+                <li key={work.id}>
+                  <article className="work-card">
+                    <Status value={work.status} />
+                    <h2>{workTitle(work.title)}</h2>
+                    <p>
+                      {work.locations[0]
+                        ? sentenceCase(work.locations[0])
+                        : "Localização não informada"}
+                    </p>
+                    <dl className="card-values">
+                      <div>
+                        <dt>Contratado</dt>
+                        <dd>{currency(work.contractedCents)}</dd>
+                      </div>
+                      <div>
+                        <dt>Pago</dt>
+                        <dd>{currency(work.paidCents)}</dd>
+                      </div>
+                    </dl>
+                    <small className="work-updated">
+                      Atualizado pela Prefeitura:{" "}
+                      {dateLabel(work.sourceUpdatedAt)}
+                    </small>
+                    <Link
+                      className="button button-secondary"
+                      href={detailHref(work)}
+                      onClick={rememberWorkPosition}
+                      aria-label={`Ver detalhes de ${workTitle(work.title)}`}
+                    >
+                      Ver detalhes →
+                    </Link>
+                  </article>
+                </li>
+              ))}
+            </ul>
+            {!home && (
+              <div className="pagination-footer">
+                <span>
+                  Mostrando {(currentPage - 1) * limit + 1} a{" "}
+                  {Math.min(currentPage * limit, filtered.length)} de{" "}
+                  {filtered.length}
+                </span>
+                {pages > 1 && (
+                  <nav aria-label="Paginação" className="pagination">
+                    <button
+                      disabled={currentPage === 1}
+                      onClick={() => changePage(currentPage - 1)}
+                    >
+                      Anterior
+                    </button>
+                    {Array.from({ length: pages }, (_, index) => index + 1).map(
+                      (number) => (
+                        <button
+                          key={number}
+                          aria-current={
+                            currentPage === number ? "page" : undefined
+                          }
+                          aria-label={`Página ${number}`}
+                          onClick={() => changePage(number)}
+                        >
+                          {number}
+                        </button>
+                      ),
+                    )}
+                    <button
+                      disabled={currentPage === pages}
+                      onClick={() => changePage(currentPage + 1)}
+                    >
+                      Próxima
+                    </button>
+                  </nav>
+                )}
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="empty-state">
+            <FileSearch size={32} aria-hidden="true" />
+            <h2>
+              {works.length
+                ? "Nenhuma obra para esta consulta"
+                : "A base de obras ainda não está disponível"}
+            </h2>
+            <p>
+              {works.length
+                ? "Tente outro termo ou remova um filtro. Você pode buscar uma localização, um contrato ou uma empresa."
+                : "Confira as fontes e o estado da coleta."}
+            </p>
+            {works.length ? (
+              <div className="empty-actions">
+                {filters.q && (
+                  <button className="button" onClick={() => update({ q: "" })}>
+                    Limpar busca
+                  </button>
+                )}
+                <button
+                  className="button button-secondary"
+                  onClick={() => update(defaultFilters)}
+                >
+                  Limpar todos os filtros
+                </button>
+              </div>
+            ) : (
+              <Link className="button" href="/metodologia/">
+                Consultar fontes
+              </Link>
+            )}
           </div>
-          {home ? (
-            <div className="table-note">
-              <span>
-                <strong>Nota de transparência:</strong> Registros oficiais, com
-                limitações sinalizadas. Não são conclusões de irregularidade.
-              </span>
-              <Link href="/termos/">Termos de uso dos dados</Link>
-            </div>
-          ) : (
-            <div className="pagination-footer">
-              <span>
-                Mostrando {(page - 1) * limit + 1} a{" "}
-                {Math.min(page * limit, filtered.length)} de {filtered.length}{" "}
-                obras registradas
-              </span>
-              {pages > 1 && (
-                <nav aria-label="Paginação" className="pagination">
-                  <button
-                    disabled={page === 1}
-                    onClick={() => setPage((p) => p - 1)}
-                  >
-                    <FigmaAsset file="3a1bc.svg" />
-                    Anterior
-                  </button>
-                  {Array.from({ length: pages }, (_, i) => i + 1).map(
-                    (number) => (
-                      <button
-                        key={number}
-                        aria-current={page === number ? "page" : undefined}
-                        aria-label={`Página ${number}`}
-                        onClick={() => setPage(number)}
-                      >
-                        {number}
-                      </button>
-                    ),
-                  )}
-                  <button
-                    disabled={page === pages}
-                    onClick={() => setPage((p) => p + 1)}
-                  >
-                    Próxima
-                    <FigmaAsset file="0eb03.svg" />
-                  </button>
-                </nav>
-              )}
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="empty-state">
-          <FileSearch size={42} />
-          <h2>
-            {works.length
-              ? "Nenhuma obra para estes filtros"
-              : "A base de obras ainda não está disponível"}
-          </h2>
-          <p>
-            {works.length
-              ? "Tente outro termo ou remova os filtros. Você pode buscar pelo nome da localização."
-              : "Consulte as fontes oficiais e o estado da coleta em Fontes e método."}
-          </p>
-          {works.length ? (
-            <button className="button" onClick={() => update(defaultFilters)}>
-              Limpar busca
-            </button>
-          ) : (
-            <Link className="button" href="/metodologia/">
-              Consultar fontes
-            </Link>
-          )}
-        </div>
-      )}
+        )}
+      </div>
     </section>
   );
 }
