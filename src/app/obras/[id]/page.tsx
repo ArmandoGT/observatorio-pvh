@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ArrowUpRight, FileText } from "lucide-react";
 import { snapshot } from "@/lib/data";
+import { contractsBySourceId } from "@/features/contratos/data";
 import {
   contractLabel,
   currency,
@@ -55,6 +56,10 @@ export default async function WorkDetail({
       </main>
     );
   if (!work) notFound();
+  const linkedContract =
+    work.contractId === null
+      ? undefined
+      : contractsBySourceId.get(work.contractId);
   const title =
     work.title === work.title.toUpperCase()
       ? work.title.charAt(0) + work.title.slice(1).toLowerCase()
@@ -364,7 +369,15 @@ export default async function WorkDetail({
         <dl className="facts">
           <div>
             <dt>Número do contrato</dt>
-            <dd>{work.contractNumber ?? "Não informado"}</dd>
+            <dd>
+              {linkedContract ? (
+                <Link href={`/contratos/${linkedContract.id}/`}>
+                  {work.contractNumber ?? linkedContract.number}
+                </Link>
+              ) : (
+                (work.contractNumber ?? "Não informado")
+              )}
+            </dd>
           </div>
           <div>
             <dt>Fornecedor</dt>

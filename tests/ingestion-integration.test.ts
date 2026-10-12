@@ -108,7 +108,30 @@ test("coletor e exportação usam o estado persistido e bloqueiam publicação a
           );
         const args = JSON.parse(String(init?.body));
         if (url.pathname.endsWith("observatory_load_state"))
-          return Response.json(await load());
+          return Response.json(
+            args.p_module === "contratos-pvh"
+              ? {
+                  revision: 1,
+                  snapshot: {
+                    schemaVersion: 1,
+                    generatedAt: baselineAt,
+                    lastAttemptAt: baselineAt,
+                    syncStatus: "ok",
+                    syncError: null,
+                    sourceTotal: 0,
+                    contracts: [],
+                    sources: [],
+                    changeSummary: {
+                      added: 0,
+                      updated: 0,
+                      unchanged: 0,
+                      notSeen: 0,
+                    },
+                  },
+                  contracts: {},
+                }
+              : await load(),
+          );
         if (url.pathname.endsWith("observatory_save_snapshot")) {
           const result = await db.query<{ revision: number }>(
             "select public.observatory_save_snapshot($1,$2,$3,$4,$5,$6::jsonb,$7::jsonb,$8::jsonb) as revision",

@@ -4,6 +4,12 @@ Fluxo: `API municipal → coletor Node.js → Supabase → JSON → build Next.j
 
 ## Banco
 
+O catálogo municipal de contratos usa o módulo isolado `contratos-pvh`, com
+as migrações `20261012022433_municipal_contract_catalog.sql` e
+`20261012023345_contract_run_metadata.sql`. Acrescenta `contract_catalog`,
+`contract_versions` e a RPC privada `observatory_save_contract_snapshot`.
+Consulte [a operação do módulo Contratos](contratos.md).
+
 A migração em `supabase/migrations/20261011184706_observatory_ingestion.sql` cria o schema privado `observatory`:
 
 | Tabela | Conteúdo |

@@ -1178,6 +1178,57 @@ tbody th {
   background: #353534;
   text-decoration: none;
 }
+.contracts-module-intro { margin-top: 32px; margin-bottom: 48px; }
+.contracts-table { width: 100%; min-width: 1180px; table-layout: fixed; font-size: 14px; }
+.contracts-table thead th { padding: 20px; line-height: 20px; }
+.contracts-table th:nth-child(1) { width: 30%; }
+.contracts-table th:nth-child(2) { width: 21%; }
+.contracts-table th:nth-child(3) { width: 16%; }
+.contracts-table th:nth-child(4) { width: 14%; }
+.contracts-table th:nth-child(5) { width: 14%; }
+.contracts-table th:nth-child(6) { width: 5%; }
+.contracts-table tbody th, .contracts-table tbody td { padding: 24px 20px; border-bottom: 1px solid #ffffff0a; overflow-wrap: anywhere; line-height: 22px; }
+.contracts-table .action-column { padding-inline: 10px; text-align: center; }
+.contract-number { font-size: 15px; font-weight: 600; }
+.contract-object { color: var(--muted); font-size: 14px; font-weight: 400; line-height: 22px; margin: 8px 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.contract-supplier { display: block; line-height: 22px; }
+.contract-meta { display: block; color: var(--dim); font-size: 12px; font-weight: 400; line-height: 20px; margin-top: 6px; }
+.contract-status { display: inline-block; padding: 6px 10px; background: var(--surface-raised); border-radius: 8px; font-size: 12px; line-height: 18px; }
+.contracts-table .money { font-family: inherit; font-variant-numeric: tabular-nums; font-size: 15px; }
+.contracts-table .row-button { width: 40px; height: 40px; padding: 0; }
+.pagination-buttons { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.pagination-buttons button { border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; min-height: 40px; }
+.pagination-buttons button:disabled { opacity: 0.4; cursor: default; }
+.contract-detail-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin: 24px 0; }
+.contract-detail-heading > div:first-child { min-width: 0; }
+.contract-detail .page-title { overflow-wrap: anywhere; }
+.contract-detail-actions { display: flex; flex-wrap: wrap; gap: 8px; flex: none; }
+.contract-metrics { margin-bottom: 32px; }
+.contract-metrics .stat > strong { font-size: 28px; overflow-wrap: anywhere; }
+.contract-metrics .contract-status-value { font-size: 24px; }
+.contract-section { margin: 24px 0; padding: 24px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.contract-section h2 { font-size: 21px; line-height: 28px; margin: 0 0 16px; }
+.contract-section > p { color: var(--muted); font-size: 14px; line-height: 24px; }
+.contract-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin: 0; }
+.contract-facts dt { color: var(--dim); font-size: 12px; margin-bottom: 6px; }
+.contract-facts dd { margin: 0; font-size: 14px; line-height: 23px; overflow-wrap: anywhere; }
+.contract-supplier-list, .contract-documents, .contract-work-links { list-style: none; padding: 0; margin: 0; }
+.contract-supplier-list li, .contract-work-links li { display: flex; flex-direction: column; gap: 6px; padding-block: 12px; line-height: 24px; overflow-wrap: anywhere; }
+.contract-supplier-list span, .contract-work-links span { font-size: 13px; color: var(--dim); }
+.contract-documents li { display: flex; gap: 16px; padding-block: 20px; border-bottom: 1px solid var(--line); }
+.contract-documents li:last-child { border-bottom: 0; padding-bottom: 0; }
+.contract-documents li > svg { flex: none; margin-top: 3px; color: var(--gold); }
+.contract-documents a { font-size: 15px; line-height: 24px; overflow-wrap: anywhere; }
+.contract-documents a svg { display: inline; vertical-align: middle; }
+.contract-documents p, .contract-documents small { font-size: 12px; color: var(--dim); line-height: 20px; margin: 8px 0 0; }
+@media (max-width: 700px) {
+  .main-nav { flex-wrap: wrap; }
+  .contract-detail-heading { flex-direction: column; }
+  .contract-facts { grid-template-columns: 1fr; gap: 18px; }
+  .contract-section { padding: 20px; }
+  .contract-catalog .filter-selects { flex-wrap: wrap; }
+  .contract-catalog .pagination-footer { align-items: flex-start; flex-direction: column; }
+}
 .pagination-footer {
   display: flex;
   align-items: center;
@@ -1983,7 +2034,7 @@ dd small {
     align-self: flex-end;
   }
 }
-@media (min-width: 701px) and (max-width: 1100px) {
+@media (min-width: 701px) and (max-width: 1190px) {
   .header-inner {
     grid-template-columns: 1fr;
     gap: 0;

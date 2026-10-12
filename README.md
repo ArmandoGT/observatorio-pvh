@@ -1,5 +1,9 @@
 # Observatório de Porto Velho
 
+O módulo **Contratos municipais** está implementado no código em `/contratos/`,
+com catálogo, fichas estáticas, documentos e vínculos por ID com as obras.
+Consulte [escopo, coleta e validação de contratos](docs/contratos.md).
+
 MVP cívico independente para consultar obras municipais, contratos associados e documentos oficiais. Next.js 16.4.0, React 19.3.0 e TypeScript. Interface baseada no Figma: tema escuro `#131313`, superfÃ­cies `#201F1F`, amarelo-ouro `#F2C230` e fonte Geist. Consulte [a aplicaÃ§Ã£o do design](docs/design-figma.md).
 
 Obras é o primeiro módulo disponível. A identidade do portal e a navegação são comuns; novos temas podem ser acrescentados com suas próprias fontes e rotas. Consulte [o recorte e a expansão do observatório](docs/observatorio.md). Site público: [pvh.dadosabertos.org](https://pvh.dadosabertos.org/).
@@ -30,6 +34,7 @@ O coletor persiste no Supabase, guardando o histórico e exportando a mesma base
 
 ```sh
 npm run sync
+npm run sync:contracts
 npm run build
 ```
 

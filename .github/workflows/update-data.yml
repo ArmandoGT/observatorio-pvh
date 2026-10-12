@@ -42,8 +42,15 @@ jobs:
             fi
           done
       - run: npm ci
-      - name: Coletar e persistir histórico
+      - name: Coletar obras e persistir histórico
         run: npm run sync
+        env:
+          SUPABASE_REQUIRED: "true"
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          PMPV_API_TOKEN: ${{ secrets.PMPV_API_TOKEN }}
+      - name: Coletar contratos municipais e persistir histórico
+        run: npm run sync:contracts
         env:
           SUPABASE_REQUIRED: "true"
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}

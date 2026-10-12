@@ -55,9 +55,9 @@ export function supabaseConfig(env: Record<string, string | undefined>) {
   return { url: parsed.origin, key };
 }
 
-export function createSnapshotStore(
+export function createIngestionRpc(
   env: Record<string, string | undefined> = process.env,
-): SnapshotStore | null {
+) {
   const config = supabaseConfig(env);
   if (!config) return null;
   const client = createClient(config.url, config.key, {
@@ -90,6 +90,14 @@ export function createSnapshotStore(
     }
     throw new Error("Falha de persistência Supabase.");
   }
+  return rpc;
+}
+
+export function createSnapshotStore(
+  env: Record<string, string | undefined> = process.env,
+): SnapshotStore | null {
+  const rpc = createIngestionRpc(env);
+  if (!rpc) return null;
   return {
     async load() {
       return stateSchema.parse(

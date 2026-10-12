@@ -1,4 +1,5 @@
 import { ObrasOverview } from "@/features/obras/Overview";
+import { ContractsOverview } from "@/features/contratos/Overview";
 
 export default function Home() {
   return (
@@ -9,10 +10,12 @@ export default function Home() {
         </h1>
         <p>
           Dados públicos com contexto para acompanhar a cidade. Explore as obras
-          municipais, confira as fontes e entenda o que cada informação revela.
+          municipais e os contratos, confira as fontes e entenda o que cada
+          informação revela.
         </p>
       </section>
       <ObrasOverview />
+      <ContractsOverview />
     </main>
   );
 }

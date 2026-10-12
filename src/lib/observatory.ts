@@ -15,6 +15,16 @@ export const observatoryModules = [
       "Consulte obras municipais, contratos, pagamentos informados e documentos oficiais da Prefeitura de Porto Velho.",
     downloadHref: "/dados/obras.json",
   },
+  {
+    id: "contratos",
+    title: "Contratos municipais",
+    navigationLabel: "Contratos",
+    href: "/contratos/",
+    description:
+      "Explore empresas contratadas, valores, vigência, aditivos, documentos e obras vinculadas aos contratos municipais.",
+    downloadHref: "/dados/contratos.json",
+  },
 ] as const;
 
 export const worksModule = observatoryModules[0];
+export const contractsModule = observatoryModules[1];

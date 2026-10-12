@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { ArrowUpRight, CheckCircle2, AlertCircle } from "lucide-react";
 import { snapshot, latestWorks } from "@/lib/data";
+import { contractSnapshot, latestContracts } from "@/features/contratos/data";
 import { dateLabel } from "@/lib/display";
 import { FigmaAsset } from "@/components/FigmaAsset";
 export const metadata: Metadata = { title: "Fontes e método" };
@@ -37,11 +38,11 @@ export default function Method() {
           </span>
           <span>
             <FigmaAsset file="30907.svg" />
-            Atualização acionada manualmente
+            Atualização diária programada
           </span>
         </div>
       </header>
-  
+
       <div className="method-accordions">
         <details className="method-accordion" id="fontes">
           <summary>
@@ -59,59 +60,64 @@ export default function Method() {
           <div className="accordion-content">
             <p>
               A coleta consulta a API de obras, percorre toda a paginação e
-              busca contratos pelo identificador explicitamente vinculado.
+              busca contratos pelo identificador explicitamente vinculado. O
+              catálogo de contratos percorre separadamente todas as páginas do
+              modelo “Contratos”, em todos os anos disponíveis. Obras e
+              contratos são associados somente pelo ID publicado pela fonte.
               Despesas não são associadas por aproximação de nomes ou valores.
             </p>
             <div className="sources-grid">
-              {snapshot.sources.map((source) => (
-                <article className="source-card" key={source.id}>
-                  <h3>{source.title}</h3>
-                  <span
-                    className={`source-state ${source.status === "available" ? "ok" : "unavailable"}`}
-                  >
-                    {source.status === "available" ? (
-                      <CheckCircle2 size={13} />
-                    ) : (
-                      <AlertCircle size={13} />
-                    )}
-                    {source.status === "available"
-                      ? "Acessível"
-                      : source.status === "partial"
-                        ? "Consulta parcial"
-                        : "Indisponível"}
-                    {source.httpStatus ? ` · HTTP ${source.httpStatus}` : ""}
-                  </span>
-                  <p>{source.note}</p>
-                  <dl>
-                    <div>
-                      <dt>Verificada em</dt>
-                      <dd>{dateLabel(source.checkedAt)}</dd>
-                    </div>
-                    <div>
-                      <dt>Atualização</dt>
-                      <dd>{source.updateFrequency}</dd>
-                    </div>
-                  </dl>
-                  <a
-                    className="text-link"
-                    href={source.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Visitar fonte <ArrowUpRight size={13} />
-                  </a>
-                  {source.termsUrl && (
+              {[...snapshot.sources, ...contractSnapshot.sources].map(
+                (source) => (
+                  <article className="source-card" key={source.id}>
+                    <h3>{source.title}</h3>
+                    <span
+                      className={`source-state ${source.status === "available" ? "ok" : "unavailable"}`}
+                    >
+                      {source.status === "available" ? (
+                        <CheckCircle2 size={13} />
+                      ) : (
+                        <AlertCircle size={13} />
+                      )}
+                      {source.status === "available"
+                        ? "Acessível"
+                        : source.status === "partial"
+                          ? "Consulta parcial"
+                          : "Indisponível"}
+                      {source.httpStatus ? ` · HTTP ${source.httpStatus}` : ""}
+                    </span>
+                    <p>{source.note}</p>
+                    <dl>
+                      <div>
+                        <dt>Verificada em</dt>
+                        <dd>{dateLabel(source.checkedAt)}</dd>
+                      </div>
+                      <div>
+                        <dt>Atualização</dt>
+                        <dd>{source.updateFrequency}</dd>
+                      </div>
+                    </dl>
                     <a
                       className="text-link"
-                      href={source.termsUrl}
+                      href={source.url}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      Regras de uso <ArrowUpRight size={13} />
+                      Visitar fonte <ArrowUpRight size={13} />
                     </a>
-                  )}
-                </article>
-              ))}
+                    {source.termsUrl && (
+                      <a
+                        className="text-link"
+                        href={source.termsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Regras de uso <ArrowUpRight size={13} />
+                      </a>
+                    )}
+                  </article>
+                ),
+              )}
             </div>
           </div>
         </details>
@@ -180,6 +186,16 @@ export default function Method() {
             <h2>Cobertura e atualização</h2>
             <ul className="prose-list">
               <li>
+                <strong>
+                  {latestContracts.length.toLocaleString("pt-BR")} contratos
+                </strong>{" "}
+                do modelo “Contratos” na API municipal. Outros instrumentos,
+                como convênios e termos de fomento, não estão incluídos neste
+                catálogo. Coleta válida de contratos:{" "}
+                {dateLabel(contractSnapshot.generatedAt)}; última tentativa:{" "}
+                {dateLabel(contractSnapshot.lastAttemptAt)}.
+              </li>
+              <li>
                 <strong>{latestWorks.length} registros</strong> na última
                 consulta completa. Não garantimos que a API contenha todas as
                 obras municipais.
@@ -207,8 +223,9 @@ export default function Method() {
               </li>
               <li>
                 A periodicidade de publicação municipal não foi confirmada. A
-                sincronização é acionada manualmente; a publicação estática
-                exige nova construção após a coleta.
+                sincronização é programada diariamente às 06:17, no horário de
+                Porto Velho, e também pode ser acionada manualmente. A
+                publicação estática exige nova construção após a coleta.
               </li>
               <li>
                 Se a coleta falhar, conservamos a última base válida. Registros
@@ -288,7 +305,6 @@ export default function Method() {
           </div>
         </details>
       </div>
-      
     </main>
   );
 }
