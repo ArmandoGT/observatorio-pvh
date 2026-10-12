@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { Github } from "lucide-react";
 import { FigmaAsset } from "./FigmaAsset";
 import { Navigation } from "./Navigation";
 import { observatory } from "@/lib/observatory";
@@ -62,6 +63,15 @@ export function Footer() {
             <FigmaAsset file="16ebc.svg" />
             Termos de uso
           </Link>
+          <a
+            href="https://github.com/santidev95/observatorio-pvh"
+            className="footer-github"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Github size={20} aria-hidden="true" />
+            Contribuir no GitHub
+          </a>
         </nav>
       </div>
     </footer>

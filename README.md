@@ -1,5 +1,7 @@
 # Observatório de Porto Velho
 
+Quer ajudar a melhorar o observatório? Consulte o [guia de contribuição](CONTRIBUTING.md).
+
 O módulo **Contratos municipais** está implementado no código em `/contratos/`,
 com catálogo, fichas estáticas, documentos e vínculos por ID com as obras.
 Consulte [escopo, coleta e validação de contratos](docs/contratos.md).
