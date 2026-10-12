@@ -4,15 +4,25 @@
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-10-11",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "vars": { "DATABASE_PROVIDER": "postgres" },
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS",
   },
   "services": [
-    { "binding": "WORKER_SELF_REFERENCE", "service": "observatorio-pvh" },
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "observatorio-pvh",
+    },
   ],
   "observability": {
     "enabled": true,
     "head_sampling_rate": 0.1,
   },
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "183b9e22d2494a2da8d490cd64698cdd",
+    },
+  ],
 }

@@ -16,11 +16,15 @@
     "deploy:check": "wrangler deploy --dry-run",
     "start": "next start --hostname 127.0.0.1",
     "typecheck": "tsc --noEmit",
+    "cf:types": "wrangler types cloudflare-env.d.ts --env-interface CloudflareEnv --include-runtime=false --env-file=ops/postgres/types.env",
     "test": "tsx --test tests/*.test.ts",
     "sync": "tsx scripts/sync.ts",
     "sync:contracts": "tsx scripts/sync-contracts.ts",
     "sync:revenues": "tsx scripts/sync-revenues.ts",
     "data:export": "tsx scripts/export-supabase.ts",
+    "db:setup": "tsx scripts/setup-postgres.ts",
+    "db:seed": "tsx scripts/seed-postgres.ts",
+    "db:hyperdrive": "tsx scripts/configure-hyperdrive.ts",
     "probe": "node scripts/probe.mjs"
   },
   "dependencies": {
@@ -29,6 +33,7 @@
     "cheerio": "1.2.0",
     "lucide-react": "0.468.0",
     "next": "16.4.0",
+    "pg": "8.23.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "server-only": "0.0.1",
@@ -37,6 +42,7 @@
   "devDependencies": {
     "@electric-sql/pglite": "0.5.8",
     "@types/node": "22.20.5",
+    "@types/pg": "8.23.1",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "patch-package": "8.0.1",

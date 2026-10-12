@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { snapshotSchema, type Snapshot } from "../../src/lib/schema";
 import { supabaseConfig } from "../../src/lib/supabase-config";
+import { createPostgresRpc, databaseProvider } from "../../src/lib/postgres";
 export { supabaseConfig } from "../../src/lib/supabase-config";
 
 export const ingestionModule = "obras-pvh";
@@ -25,6 +26,7 @@ export interface SnapshotStore {
 export function createIngestionRpc(
   env: Record<string, string | undefined> = process.env,
 ) {
+  if (databaseProvider(env) === "postgres") return createPostgresRpc(env);
   const config = supabaseConfig(env);
   if (!config) return null;
   const client = createClient(config.url, config.key, {

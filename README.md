@@ -14,14 +14,14 @@ Obras é o primeiro módulo disponível. A identidade do portal e a navegação 
 
 ## Executar
 
-Requer Node.js 22 ou superior e npm. Configure `SUPABASE_URL` e `SUPABASE_SECRET_KEY` em `.env.local`, conforme `.env.example`. O site consulta o banco no servidor; nenhum segredo é enviado ao navegador.
+Requer Node.js 22 ou superior e npm. Configure o ambiente PostgreSQL de leitura conforme `.env.example` e [a operação da VPS](docs/postgres.md). O site consulta o banco no servidor; nenhum segredo é enviado ao navegador.
 
 ```sh
 npm ci
 npm run dev
 ```
 
-Abra o endereço local mostrado no terminal. A base oficial persistida no Supabase é consultada durante cada requisição. Os JSONs locais ficam disponíveis apenas para ingestão e auditoria.
+Abra o endereço local mostrado no terminal. A base persistida é consultada durante cada requisição. Os JSONs locais ficam disponíveis apenas para ingestão e auditoria.
 
 ```sh
 npm run typecheck
@@ -34,15 +34,15 @@ npm start
 
 ## Atualizar dados
 
-O coletor persiste no Supabase, guardando o histórico. O site consulta essa base a cada acesso, sem exportação nem rebuild após a coleta. O workflow `.github/workflows/deploy.yml` publica o código após pushes em `main` ou acionamento manual, usando a base existente. A coleta é independente e acontece somente quando acionada em **Actions → Atualizar base de dados → Run workflow** (`.github/workflows/sync-data.yml`). Não há coleta agendada nem sync durante o deploy. Consulte [persistência e operação com Supabase](docs/supabase.md).
+O coletor persiste no PostgreSQL, guardando o histórico das próximas coletas. A VPS foi iniciada com os snapshots locais, sem copiar o histórico exclusivo do Supabase. O site consulta essa base a cada acesso, sem exportação nem rebuild após a coleta. O workflow `.github/workflows/deploy.yml` publica o código após pushes em `main` ou acionamento manual, usando a base existente. A coleta é independente e acontece somente quando acionada em **Actions → Atualizar base de dados → Run workflow** (`.github/workflows/sync-data.yml`). Não há coleta agendada nem sync durante o deploy. Consulte [persistência e operação com PostgreSQL](docs/postgres.md).
 
 ```sh
-npm run sync
-npm run sync:contracts
-npm run sync:revenues
+node --env-file=.env.postgres-sync.local --import tsx scripts/sync.ts
+node --env-file=.env.postgres-sync.local --import tsx scripts/sync-contracts.ts
+node --env-file=.env.postgres-sync.local --import tsx scripts/sync-revenues.ts
 ```
 
-O comando percorre toda a paginação de `/api/v1/obras`, valida o total retornado, consulta os contratos pelo ID explícito e persiste o resultado no Supabase. Arquivos em `data/` e `data/exports/` são cópias locais de ingestão. A próxima requisição ao site recebe o estado do banco. A coleta diária depende da disponibilidade das fontes e não representa atualização em tempo real da Prefeitura.
+Com `DATABASE_PROVIDER=postgres` e as credenciais de ingestão, o comando percorre toda a paginação de `/api/v1/obras`, valida o total retornado, consulta os contratos pelo ID explícito e persiste o resultado na VPS. Arquivos em `data/` e `data/exports/` são cópias locais de ingestão. A próxima requisição ao site recebe o estado do banco. A coleta manual depende da disponibilidade das fontes e não representa atualização em tempo real da Prefeitura.
 
 O armazenamento é incremental por ID e hash de conteúdo: primeira coleta, última alteração e registros ausentes são preservados. A leitura da API continua sendo uma varredura completa porque `/obras` não documenta filtro por atualização. Não se presume suporte a ETag, webhook ou cursor temporal.
 

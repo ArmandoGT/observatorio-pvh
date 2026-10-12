@@ -19,15 +19,15 @@ const revenueState = await createRevenueStore({
 })!.load();
 if (!revenueState.snapshot || revenueState.snapshot.syncStatus !== "ok")
   throw new Error(
-    "Não há coleta válida de receitas no Supabase para publicar. Execute npm run sync:revenues primeiro.",
+    "Não há coleta válida de receitas no banco para publicar. Execute npm run sync:revenues primeiro.",
   );
 if (!contractState.snapshot || contractState.snapshot.syncStatus !== "ok")
   throw new Error(
-    "Não há coleta válida de contratos no Supabase para publicar. Execute npm run sync:contracts primeiro.",
+    "Não há coleta válida de contratos no banco para publicar. Execute npm run sync:contracts primeiro.",
   );
 if (!state.snapshot || !["ok", "partial"].includes(state.snapshot.syncStatus))
   throw new Error(
-    "Não há coleta válida no Supabase para publicar. Execute npm run sync primeiro.",
+    "Não há coleta válida no banco para publicar. Execute npm run sync primeiro.",
   );
 for (const [path, data] of [
   ["data/snapshot.json", state.snapshot],
@@ -43,5 +43,5 @@ for (const [path, data] of [
   await rename(`${path}.tmp`, path);
 }
 console.log(
-  `Base exportada do Supabase: revisão ${state.revision}, ${state.snapshot.sourceTotal} obras; contratos: ${contractState.snapshot.sourceTotal}.`,
+  `Base exportada do banco: revisão ${state.revision}, ${state.snapshot.sourceTotal} obras; contratos: ${contractState.snapshot.sourceTotal}.`,
 );

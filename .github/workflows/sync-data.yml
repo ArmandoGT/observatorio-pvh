@@ -25,10 +25,10 @@ jobs:
           cache: npm
       - name: Verificar configuração da coleta
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_SSL_CA: ${{ secrets.DATABASE_SSL_CA }}
         run: |
-          for name in SUPABASE_URL SUPABASE_SECRET_KEY; do
+          for name in DATABASE_URL DATABASE_SSL_CA; do
             if [ -z "${!name}" ]; then
               echo "::error::Secret obrigatório ausente: $name"
               exit 1
@@ -40,21 +40,21 @@ jobs:
       - name: Coletar obras e persistir histórico
         run: npm run sync
         env:
-          SUPABASE_REQUIRED: "true"
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          DATABASE_PROVIDER: postgres
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_SSL_CA: ${{ secrets.DATABASE_SSL_CA }}
           PMPV_API_TOKEN: ${{ secrets.PMPV_API_TOKEN }}
       - name: Coletar contratos municipais e persistir histórico
         run: npm run sync:contracts
         env:
-          SUPABASE_REQUIRED: "true"
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          DATABASE_PROVIDER: postgres
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_SSL_CA: ${{ secrets.DATABASE_SSL_CA }}
           PMPV_API_TOKEN: ${{ secrets.PMPV_API_TOKEN }}
       - name: Coletar receitas e previsão orçamentária
         run: npm run sync:revenues
         env:
-          SUPABASE_REQUIRED: "true"
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          DATABASE_PROVIDER: postgres
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_SSL_CA: ${{ secrets.DATABASE_SSL_CA }}
           PMPV_API_TOKEN: ${{ secrets.PMPV_API_TOKEN }}

@@ -1,7 +1,7 @@
 # Publicacao na Cloudflare
 
 O Observatorio executa Next.js no Worker `observatorio-pvh`, usando OpenNext.
-Paginas de dados e downloads consultam Supabase durante a requisicao. O dominio
+Paginas de dados e downloads consultam PostgreSQL por Hyperdrive durante a requisicao. O dominio
 continua sendo `pvh.dadosabertos.org`. A publicacao nao usa mais `out/`.
 
 ## Build e publicacao
@@ -34,15 +34,17 @@ podem ser consultados diretamente pelas URLs de detalhe.
 
 ## Credenciais do servidor
 
-Configure `SUPABASE_URL` e `SUPABASE_SECRET_KEY` como secrets do Worker. A chave
-de servidor nunca deve ter prefixo `NEXT_PUBLIC_`. O schema privado, RLS e as
-RPCs restritas a `service_role` permanecem protegidos. O site so chama a RPC de
-leitura e nao publica uma API de gravacao.
+O binding `HYPERDRIVE` usa `observatory_reader`, sem permissao de escrita.
+Selecione `DATABASE_PROVIDER=postgres` em `vars`. Hyperdrive verifica a CA
+privada e a identidade da VPS com `verify-full`; seu cache esta desativado.
+O schema privado e RLS permanecem protegidos. Nao publique `DATABASE_URL`
+nem credenciais administrativas ou do coletor nos assets ou no cliente.
 
-No GitHub Actions, os secrets existentes sao enviados ao Worker pelo passo
-`wrangler secret bulk`, sem arquivo versionado nem valores nos logs. O build
-nao recebe credenciais Supabase. A alteracao local do workflow nao configura
-o Worker existente ate que uma publicacao seja executada.
+O deploy requer somente os secrets Cloudflare. A coleta manual usa os Actions
+secrets `DATABASE_URL` e `DATABASE_SSL_CA`, com `observatory_ingestor`.
+O build nao recebe credenciais do banco. Consulte [a operacao PostgreSQL](postgres.md).
+A preparacao do Hyperdrive e do codigo nao altera o Worker ja publicado;
+a troca do site depende de deploy autorizado. Supabase permanece intacto para retorno.
 
 ## Atualizacao e desenvolvimento
 
@@ -60,7 +62,7 @@ Para conferir o runtime Workers, execute `npm run build:cloudflare` seguido de
 variaveis locais do Worker. Esse arquivo permanece fora do Git.
 
 Falha da prefeitura preserva o ultimo estado valido no banco e seu aviso de
-coleta. Falha de acesso ao Supabase mostra o estado de erro da pagina; downloads
+coleta. Falha de acesso ao banco mostra o estado de erro da pagina; downloads
 retornam 503. Nao ha fallback silencioso para arquivos antigos.
 
 Referencias: [OpenNext](https://opennext.js.org/cloudflare/get-started),

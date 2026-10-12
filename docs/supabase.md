@@ -1,5 +1,10 @@
 # Persistência e atualização dos dados
 
+> Configuracao legada: o codigo agora suporta PostgreSQL na VPS e o sync manual
+> foi adaptado para esse destino. Consulte [a operacao PostgreSQL](postgres.md).
+> O Supabase foi mantido intacto; seu historico exclusivo nao foi transferido.
+> A troca do site publicado depende de deploy autorizado.
+
 Fluxo: `API municipal → coletor Node.js → Supabase → servidor Next.js no Worker → site`. Páginas e downloads consultam o estado persistido durante cada requisição; busca e filtros continuam no navegador. O servidor exige `SUPABASE_URL` e `SUPABASE_SECRET_KEY`, sem expor credenciais ao visitante. Consulte [a configuração Cloudflare/OpenNext](cloudflare.md).
 
 ## Banco

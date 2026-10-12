@@ -1,0 +1,92 @@
+services:
+  postgres_tls:
+    image: postgres:17
+    restart: "no"
+    user: "0:0"
+    volumes:
+      - postgres_tls:/tls
+    entrypoint:
+      - /bin/bash
+      - -ec
+      - |
+        umask 077
+        command -v openssl >/dev/null
+        if [ -e /tls/ca.key ] || [ -e /tls/ca.crt ] || [ -e /tls/server.key ] || [ -e /tls/server.crt ]; then
+          test -s /tls/ca.key
+          test -s /tls/ca.crt
+          test -s /tls/server.key
+          test -s /tls/server.crt
+        else
+          openssl req -x509 -newkey rsa:3072 -nodes -sha256 -days 3650 \
+            -keyout /tls/ca.key -out /tls/ca.crt \
+            -subj "/CN=Observatorio PVH PostgreSQL CA" \
+            -addext "basicConstraints=critical,CA:TRUE" \
+            -addext "keyUsage=critical,keyCertSign,cRLSign"
+          openssl req -new -newkey rsa:3072 -nodes -sha256 \
+            -keyout /tls/server.key -out /tls/server.csr \
+            -subj "/CN=93.127.211.223"
+          printf '%s\n' \
+            'basicConstraints=critical,CA:FALSE' \
+            'keyUsage=critical,digitalSignature,keyEncipherment' \
+            'extendedKeyUsage=serverAuth' \
+            'subjectAltName=IP:93.127.211.223' > /tls/server.ext
+          openssl x509 -req -in /tls/server.csr \
+            -CA /tls/ca.crt -CAkey /tls/ca.key -CAcreateserial \
+            -out /tls/server.crt -days 365 -sha256 -extfile /tls/server.ext
+        fi
+        openssl verify -CAfile /tls/ca.crt /tls/server.crt
+        openssl x509 -in /tls/server.crt -checkend 0 -noout
+        printf '%s\n' \
+          'local all all scram-sha-256' \
+          'hostnossl all all 0.0.0.0/0 reject' \
+          'hostnossl all all ::/0 reject' \
+          'hostssl all all 0.0.0.0/0 scram-sha-256' \
+          'hostssl all all ::/0 scram-sha-256' > /tls/pg_hba.conf
+        chmod 755 /tls
+        chown root:root /tls/ca.key
+        chmod 600 /tls/ca.key
+        chown postgres:postgres /tls/server.key
+        chmod 600 /tls/server.key
+        chmod 644 /tls/ca.crt /tls/server.crt /tls/pg_hba.conf
+        printf '\nCA publica para configurar a confianca do cliente/Hyperdrive:\n'
+        openssl x509 -in /tls/ca.crt -outform PEM
+
+  postgresql:
+    image: postgres:17
+    restart: unless-stopped
+    depends_on:
+      postgres_tls:
+        condition: service_completed_successfully
+    ports:
+      - "32770:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?Configure POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Configure POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:?Configure POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - postgres_tls:/etc/postgresql/tls:ro
+    command:
+      - postgres
+      - -c
+      - ssl=on
+      - -c
+      - ssl_min_protocol_version=TLSv1.2
+      - -c
+      - ssl_cert_file=/etc/postgresql/tls/server.crt
+      - -c
+      - ssl_key_file=/etc/postgresql/tls/server.key
+      - -c
+      - hba_file=/etc/postgresql/tls/pg_hba.conf
+      - -c
+      - password_encryption=scram-sha-256
+    healthcheck:
+      test: ["CMD-SHELL", 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    stop_grace_period: 60s
+
+volumes:
+  postgres_data:
+  postgres_tls:
