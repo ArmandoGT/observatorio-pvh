@@ -1,20 +1,26 @@
 import type { Metadata } from "next";
 import { Download } from "lucide-react";
 import { dateLabel } from "@/lib/display";
-import {
-  getContractsData,
-  contractSummaries,
-  contractTotal,
-} from "@/features/contratos/data";
+import { getContractsData, contractTotal } from "@/features/contratos/data";
 import { ContractCatalog } from "@/features/contratos/Catalog";
+import { contractCatalogView } from "@/features/contratos/catalog-view";
+import { searchParamsQuery, type PageSearchParams } from "@/lib/catalog-query";
 export const metadata: Metadata = {
   title: "Contratos municipais",
   description:
     "Consulte contratos municipais de Porto Velho, empresas, valores, vigência, documentos e obras vinculadas.",
 };
-export default async function Contracts() {
+export default async function Contracts({
+  searchParams,
+}: {
+  searchParams: Promise<PageSearchParams>;
+}) {
   const { contractSnapshot, latestContracts } = await getContractsData();
   const total = contractTotal(latestContracts);
+  const view = contractCatalogView(
+    latestContracts,
+    searchParamsQuery(await searchParams),
+  );
   return (
     <main id="conteudo" className="container page-main catalog-page">
       <div className="catalog-heading">
@@ -47,7 +53,7 @@ export default async function Contracts() {
           A última coleta de contratos falhou. Exibimos a última base válida.
         </div>
       )}
-      <ContractCatalog contracts={contractSummaries(latestContracts)} />
+      <ContractCatalog view={view} />
       <p className="overview-note">
         Incluímos o modelo “Contratos” da API, de todos os anos disponíveis. A
         base tem {total.count.toLocaleString("pt-BR")} contratos com valor

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { RevenueDashboard } from "@/features/receitas/Dashboard";
 import { getRevenueData } from "@/features/receitas/data";
+import { revenueDashboardView } from "@/features/receitas/dashboard-view";
+import { searchParamsQuery, type PageSearchParams } from "@/lib/catalog-query";
 import { ArrowUpRight } from "lucide-react";
 export const metadata: Metadata = {
   title: "Receitas e orçamento",
@@ -27,8 +29,16 @@ const documents = [
     href: "https://transparencia.portovelho.ro.gov.br/arquivos?pasta=168",
   },
 ];
-export default async function RevenuePage() {
+export default async function RevenuePage({
+  searchParams,
+}: {
+  searchParams: Promise<PageSearchParams>;
+}) {
   const { revenueSnapshot } = await getRevenueData();
+  const view = revenueDashboardView(
+    revenueSnapshot,
+    searchParamsQuery(await searchParams),
+  );
   return (
     <main id="conteudo" className="container page-main revenue-page">
       <h1 className="page-title">Receitas e orçamento</h1>
@@ -43,7 +53,7 @@ export default async function RevenuePage() {
         </div>
       )}
       {revenueSnapshot.years.length ? (
-        <RevenueDashboard snapshot={revenueSnapshot} />
+        <RevenueDashboard view={view} />
       ) : (
         <div className="notice" role="status">
           Nenhum exercício de receitas está disponível na base consultada.

@@ -26,8 +26,17 @@ Nao existe leitura de arquivos JSON nem acesso ao banco durante o build.
 
 Os carregadores de cada modulo calculam listas atuais e indices por ID a partir
 do estado lido. Registros historicos continuam acessiveis pelos detalhes, mas
-ficam fora dos totais atuais. Busca, filtros, ordenacao e paginacao continuam
-no navegador sobre os dados recebidos do servidor.
+ficam fora dos totais atuais. Em Contratos e Receitas, busca, filtros, ordenacao
+e paginacao sao calculados no servidor a partir de `searchParams`. O navegador
+recebe somente 12 linhas, opcoes dos filtros e agregados do recorte, nunca a
+base inteira. A URL conserva filtros e pagina; a busca aguarda 250 ms entre
+alteracoes para evitar uma consulta por tecla. Obras conserva o filtro local
+sobre seu catalogo menor.
+
+O grafico de Receitas agrega os doze meses em uma passagem pelos documentos.
+Valores negativos, meses sem registros, cobertura parcial e previsao anual
+mantem as mesmas regras. Downloads continuam completos e independentes da
+paginacao. Nao foi introduzido cache de snapshots entre requisicoes.
 
 `/dados/obras.json`, `/dados/contratos.json` e `/dados/receitas.json` sao rotas
 de leitura que geram downloads a partir do mesmo carregador. Retornam

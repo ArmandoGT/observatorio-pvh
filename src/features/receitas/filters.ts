@@ -74,15 +74,52 @@ export function filterRevenueEntries(
   );
 }
 export function periodValue(entry: RevenueEntry, month = "") {
-  const records = entry.months.filter(
-    (m) => !month || String(m.month) === month,
-  );
-  const known = records.filter((m) => m.cents !== null);
-  return {
-    cents: known.length ? known.reduce((n, m) => n + m.cents!, 0) : null,
-    documents: records.reduce((n, m) => n + m.documents, 0),
-    missing: records.reduce((n, m) => n + m.missingValues, 0),
-  };
+  const total = { cents: null as number | null, documents: 0, missing: 0 };
+  for (const record of entry.months) {
+    if (month && String(record.month) !== month) continue;
+    if (record.cents !== null) total.cents = (total.cents ?? 0) + record.cents;
+    total.documents += record.documents;
+    total.missing += record.missingValues;
+  }
+  return total;
+}
+export function monthlyRevenueTotals(entries: RevenueEntry[]) {
+  let plannedCents: number | null = null;
+  let missingPlanned = 0;
+  let budget = true;
+  const months = Array.from({ length: 12 }, () => ({
+    realizedCents: null as number | null,
+    documents: 0,
+    missing: 0,
+  }));
+  // Percorre os documentos uma vez, em vez de filtrar toda a base por mes.
+  for (const entry of entries) {
+    if (entry.plannedCents !== null)
+      plannedCents = (plannedCents ?? 0) + entry.plannedCents;
+    missingPlanned += entry.missingPlannedValues;
+    budget &&= entry.kind === "budget";
+    for (const record of entry.months) {
+      const month = months[record.month - 1];
+      if (record.cents !== null)
+        month.realizedCents = (month.realizedCents ?? 0) + record.cents;
+      month.documents += record.documents;
+      month.missing += record.missingValues;
+    }
+  }
+  return months.map((month) => ({
+    plannedCents,
+    ...month,
+    missingPlanned,
+    percent:
+      plannedCents !== null &&
+      plannedCents > 0 &&
+      month.realizedCents !== null &&
+      !month.missing &&
+      !missingPlanned &&
+      budget
+        ? (month.realizedCents / plannedCents) * 100
+        : null,
+  }));
 }
 export function revenueTotals(entries: RevenueEntry[], month = "") {
   const planned = entries.filter((e) => e.plannedCents !== null);

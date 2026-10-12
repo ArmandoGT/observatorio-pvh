@@ -1,103 +1,45 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
 import { Search, X, ArrowUpRight, Download } from "lucide-react";
 import { currency, dateLabel, percentLabel } from "@/lib/display";
-import type { RevenueSnapshot } from "./schema";
+import type { RevenueDashboardView } from "./dashboard-view";
+import { useCatalogNavigation } from "@/lib/use-catalog-navigation";
 import {
-  filterRevenueEntries,
   monthNames,
-  periodValue,
-  readRevenueFilters,
   revenueDefaults,
   revenueFilterQuery,
-  revenueTotals,
   shortLabel,
-  type RevenueFilters,
 } from "./filters";
 
-export function RevenueDashboard({ snapshot }: { snapshot: RevenueSnapshot }) {
-  const latestYear = Math.max(...snapshot.years.map((y) => y.year));
-  const [filters, setFilters] = useState(revenueDefaults(latestYear));
-  const [page, setPage] = useState(1);
-  useEffect(() => {
-    const read = () => {
-      setFilters(readRevenueFilters(window.location.search, latestYear));
-      setPage(1);
-    };
-    read();
-    window.addEventListener("popstate", read);
-    return () => window.removeEventListener("popstate", read);
-  }, [latestYear]);
-  const update = (patch: Partial<RevenueFilters>) => {
-    const next = { ...filters, ...patch };
-    setFilters(next);
-    setPage(1);
-    const query = revenueFilterQuery(next, latestYear);
-    window.history.replaceState(
-      null,
-      "",
-      `${window.location.pathname}${query ? "?" + query : ""}`,
-    );
-  };
-  const entries = useMemo(
-    () => filterRevenueEntries(snapshot.entries, filters),
-    [snapshot.entries, filters],
+export function RevenueDashboard({ view }: { view: RevenueDashboardView }) {
+  const {
+    latestYear,
+    filters,
+    totals,
+    units,
+    categories,
+    monthly,
+    page,
+    pages,
+    count,
+  } = view;
+  const { draft, pending, update, changePage } = useCatalogNavigation(
+    "/receitas/",
+    filters,
+    view.query,
+    (next) => revenueFilterQuery(next, latestYear),
   );
-  const totals = revenueTotals(entries, filters.month);
-  const yearStats = snapshot.years.find((y) => String(y.year) === filters.year);
-  const units = [
-    ...new Map(
-      snapshot.entries
-        .filter((e) => e.inLatestSnapshot && String(e.year) === filters.year)
-        .map((e) => [e.unitId, e.unitName]),
-    ).entries(),
-  ].sort((a, b) => a[1].localeCompare(b[1]));
-  const categories = [
-    ...new Set(
-      snapshot.entries
-        .filter(
-          (e) =>
-            e.inLatestSnapshot &&
-            String(e.year) === filters.year &&
-            e.kind === filters.kind,
-        )
-        .map((e) => e.category),
-    ),
-  ].sort();
-  const monthly = monthNames.map((name, i) => ({
-    name,
-    month: i + 1,
-    ...revenueTotals(entries, String(i + 1)),
-  }));
+  const yearStats = view.years.find((y) => String(y.year) === filters.year);
   const max = Math.max(
     1,
     ...monthly.map((m) => Math.abs(m.realizedCents ?? 0)),
   );
-  const sorted = [...entries].sort((a, b) => {
-    if (filters.sort === "account") return a.account.localeCompare(b.account);
-    const av =
-      filters.sort === "planned"
-        ? a.plannedCents
-        : periodValue(a, filters.month).cents;
-    const bv =
-      filters.sort === "planned"
-        ? b.plannedCents
-        : periodValue(b, filters.month).cents;
-    return av === null
-      ? bv === null
-        ? a.id.localeCompare(b.id)
-        : 1
-      : bv === null
-        ? -1
-        : bv - av || a.id.localeCompare(b.id);
-  });
-  const pages = Math.max(1, Math.ceil(sorted.length / 12));
   const sourceHref = `https://api.portovelho.ro.gov.br/api/v1/receitas?portal_id=12535&ano=${filters.year}`;
   return (
     <>
       <section
         className="search-panel revenue-filters"
         aria-label="Filtros de receitas"
+        aria-busy={pending}
       >
         <label className="search-field">
           <Search size={20} aria-hidden="true" />
@@ -107,7 +49,8 @@ export function RevenueDashboard({ snapshot }: { snapshot: RevenueSnapshot }) {
           <input
             type="search"
             placeholder="Buscar receita, conta ou fonte de recurso..."
-            value={filters.q}
+            value={draft.q}
+            maxLength={200}
             onChange={(e) => update({ q: e.target.value })}
           />
         </label>
@@ -116,11 +59,12 @@ export function RevenueDashboard({ snapshot }: { snapshot: RevenueSnapshot }) {
             Exercício
             <select
               value={filters.year}
+              disabled={pending}
               onChange={(e) =>
                 update({ year: e.target.value, unit: "", category: "" })
               }
             >
-              {snapshot.years.map((y) => (
+              {view.years.map((y) => (
                 <option key={y.year} value={y.year}>
                   {y.year}
                 </option>
@@ -131,6 +75,7 @@ export function RevenueDashboard({ snapshot }: { snapshot: RevenueSnapshot }) {
             Unidade gestora
             <select
               value={filters.unit}
+              disabled={pending}
               onChange={(e) => update({ unit: e.target.value })}
             >
               <option value="">Todas as unidades</option>
@@ -145,6 +90,7 @@ export function RevenueDashboard({ snapshot }: { snapshot: RevenueSnapshot }) {
             Tipo de receita
             <select
               value={filters.kind}
+              disabled={pending}
               onChange={(e) => update({ kind: e.target.value, category: "" })}
             >
               <option value="budget">Orçamentária</option>
@@ -156,6 +102,7 @@ export function RevenueDashboard({ snapshot }: { snapshot: RevenueSnapshot }) {
             Categoria
             <select
               value={filters.category}
+              disabled={pending}
               onChange={(e) => update({ category: e.target.value })}
             >
               <option value="">Todas as categorias</option>
@@ -170,6 +117,7 @@ export function RevenueDashboard({ snapshot }: { snapshot: RevenueSnapshot }) {
             Período da arrecadação
             <select
               value={filters.month}
+              disabled={pending}
               onChange={(e) => update({ month: e.target.value })}
             >
               <option value="">Todos os meses publicados</option>
@@ -197,12 +145,17 @@ export function RevenueDashboard({ snapshot }: { snapshot: RevenueSnapshot }) {
           )}
         </div>
       </section>
+      {pending && (
+        <p className="sr-only" role="status">
+          Atualizando receitas...
+        </p>
+      )}
       <div className="revenue-coverage">
         <span>
           Exercício <strong>{filters.year}</strong> · Documentos da fonte até{" "}
           <strong>{dateLabel(yearStats?.lastDocumentDate ?? null)}</strong>
         </span>
-        <span>Coleta em {dateLabel(snapshot.generatedAt)}</span>
+        <span>Coleta em {dateLabel(view.generatedAt)}</span>
       </div>
       <section
         className="revenue-metrics"
@@ -245,7 +198,7 @@ export function RevenueDashboard({ snapshot }: { snapshot: RevenueSnapshot }) {
           <span>Documentos no período</span>
           <strong>{totals.documents.toLocaleString("pt-BR")}</strong>
           <small>
-            {entries.length.toLocaleString("pt-BR")} contas e fontes no recorte
+            {count.toLocaleString("pt-BR")} contas e fontes no recorte
           </small>
         </article>
       </section>
@@ -319,6 +272,7 @@ export function RevenueDashboard({ snapshot }: { snapshot: RevenueSnapshot }) {
             Ordenar por
             <select
               value={filters.sort}
+              disabled={pending}
               onChange={(e) => update({ sort: e.target.value })}
             >
               <option value="realized">Maior valor registrado</option>
@@ -327,7 +281,7 @@ export function RevenueDashboard({ snapshot }: { snapshot: RevenueSnapshot }) {
             </select>
           </label>
         </div>
-        {!entries.length ? (
+        {!count ? (
           <p className="notice" role="status">
             Nenhuma receita encontrada para estes filtros.
           </p>
@@ -348,8 +302,8 @@ export function RevenueDashboard({ snapshot }: { snapshot: RevenueSnapshot }) {
                 </tr>
               </thead>
               <tbody>
-                {sorted.slice((page - 1) * 12, page * 12).map((e) => {
-                  const received = periodValue(e, filters.month);
+                {view.rows.map((e) => {
+                  const received = e.received;
                   return (
                     <tr key={e.id}>
                       <th scope="row">
@@ -390,21 +344,21 @@ export function RevenueDashboard({ snapshot }: { snapshot: RevenueSnapshot }) {
         )}
         <div className="revenue-pagination">
           <span aria-live="polite">
-            {entries.length.toLocaleString("pt-BR")} contas e fontes · Página{" "}
-            {page} de {pages}
+            {count.toLocaleString("pt-BR")} contas e fontes · Página {page} de{" "}
+            {pages}
           </span>
           <div>
             <button
               className="button button-secondary"
-              disabled={page === 1}
-              onClick={() => setPage(page - 1)}
+              disabled={pending || page === 1}
+              onClick={() => changePage(page - 1)}
             >
               Anterior
             </button>
             <button
               className="button button-secondary"
-              disabled={page === pages}
-              onClick={() => setPage(page + 1)}
+              disabled={pending || page === pages}
+              onClick={() => changePage(page + 1)}
             >
               Próxima
             </button>

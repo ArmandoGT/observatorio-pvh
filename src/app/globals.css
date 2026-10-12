@@ -1502,6 +1502,10 @@ tbody th {
   table-layout: fixed;
   font-size: 14px;
 }
+/* Contem os rotulos absolutos de acessibilidade na regiao de rolagem. */
+.contract-catalog .table-scroll {
+  position: relative;
+}
 .contracts-table thead th {
   padding: 20px;
   line-height: 20px;

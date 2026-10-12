@@ -114,3 +114,9 @@ Para publicar na Cloudflare Workers, execute `npm run build:cloudflare`, `npm ru
 O projeto requer um servidor Next.js ou Worker OpenNext. A configuração histórica `.openai/hosting.json` de exportação estática não é usada nesta publicação.
 
 Os JSONs não são consumidos pelas páginas. Não existe API pública de escrita; a ingestão continua nos coletores e no workflow.
+
+## Licença
+
+O código do projeto é distribuído sob a [licença MIT](LICENSE).
+Dados, documentos e recursos de terceiros mantêm as condições de suas fontes;
+esta licença não os relicencia.

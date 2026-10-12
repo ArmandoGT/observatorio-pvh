@@ -1,78 +1,26 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
 import { ChevronRight, Search, X } from "lucide-react";
 import { currency, dateLabel } from "@/lib/display";
 import { sentenceCase } from "@/lib/work-presentation";
-import type { ContractSummary } from "./schema";
-import {
-  contractFilterQuery,
-  defaultContractFilters,
-  filterContracts,
-  readContractFilters,
-  type ContractFilters,
-} from "./filters";
+import type { ContractCatalogView } from "./catalog-view";
+import { useCatalogNavigation } from "@/lib/use-catalog-navigation";
+import { contractFilterQuery, defaultContractFilters } from "./filters";
 
-export function ContractCatalog({
-  contracts,
-}: {
-  contracts: ContractSummary[];
-}) {
-  const [filters, setFilters] = useState(defaultContractFilters);
-  const [page, setPage] = useState(1);
-  useEffect(() => {
-    const read = () => {
-      setFilters(readContractFilters(window.location.search));
-      setPage(1);
-    };
-    read();
-    window.addEventListener("popstate", read);
-    return () => window.removeEventListener("popstate", read);
-  }, []);
-  const options = useMemo(
-    () => ({
-      years: [
-        ...new Set(
-          contracts.flatMap((contract) =>
-            contract.year === null ? [] : [String(contract.year)],
-          ),
-        ),
-      ].sort((a, b) => Number(b) - Number(a)),
-      orgs: [
-        ...new Set(
-          contracts.flatMap((contract) =>
-            contract.organization ? [contract.organization] : [],
-          ),
-        ),
-      ].sort(),
-      statuses: [
-        ...new Set(contracts.map((contract) => contract.status)),
-      ].sort(),
-    }),
-    [contracts],
+export function ContractCatalog({ view }: { view: ContractCatalogView }) {
+  const { filters, page, pages, options, rows: shown, count } = view;
+  const { draft, pending, update, changePage } = useCatalogNavigation(
+    "/contratos/",
+    filters,
+    view.query,
+    contractFilterQuery,
   );
-  const filtered = useMemo(
-    () => filterContracts(contracts, filters),
-    [contracts, filters],
-  );
-  const pages = Math.max(1, Math.ceil(filtered.length / 12));
-  const shown = filtered.slice((page - 1) * 12, page * 12);
-  const update = (patch: Partial<ContractFilters>) => {
-    const next = { ...filters, ...patch };
-    setFilters(next);
-    setPage(1);
-    const query = contractFilterQuery(next);
-    window.history.replaceState(
-      null,
-      "",
-      `${window.location.pathname}${query ? "?" + query : ""}`,
-    );
-  };
   const active = contractFilterQuery(filters) !== "";
   return (
     <section
       className="work-list catalog-works contract-catalog"
       aria-label="Consulta de contratos"
+      aria-busy={pending}
     >
       <div className="search-panel">
         <label className="search-field">
@@ -83,7 +31,8 @@ export function ContractCatalog({
           <input
             type="search"
             placeholder="Buscar por contrato, objeto, empresa ou processo..."
-            value={filters.q}
+            value={draft.q}
+            maxLength={300}
             onChange={(event) => update({ q: event.target.value })}
             onKeyDown={(event) => {
               if (event.key === "Escape") update({ q: "" });
@@ -97,6 +46,7 @@ export function ContractCatalog({
               <span className="sr-only">Ano do contrato</span>
               <select
                 value={filters.year}
+                disabled={pending}
                 onChange={(event) => update({ year: event.target.value })}
               >
                 <option value="">Ano: Todos</option>
@@ -111,6 +61,7 @@ export function ContractCatalog({
               <span className="sr-only">Órgão contratante</span>
               <select
                 value={filters.org}
+                disabled={pending}
                 onChange={(event) => update({ org: event.target.value })}
               >
                 <option value="">Órgão: Todos</option>
@@ -125,6 +76,7 @@ export function ContractCatalog({
               <span className="sr-only">Situação do contrato</span>
               <select
                 value={filters.status}
+                disabled={pending}
                 onChange={(event) => update({ status: event.target.value })}
               >
                 <option value="">Situação: Todas</option>
@@ -149,15 +101,13 @@ export function ContractCatalog({
         <div className="results-bar">
           <span role="status" aria-live="polite">
             <span className="gold-dot" />
-            Exibindo <strong>
-              {filtered.length.toLocaleString("pt-BR")}
-            </strong>{" "}
-            contratos
+            Exibindo <strong>{count.toLocaleString("pt-BR")}</strong> contratos
           </span>
           <label className="sort-select">
             Ordenar:
             <select
               value={filters.sort}
+              disabled={pending}
               onChange={(event) => update({ sort: event.target.value })}
             >
               <option value="updated">Atualização da fonte</option>
@@ -167,6 +117,11 @@ export function ContractCatalog({
           </label>
         </div>
       </div>
+      {pending && (
+        <p className="sr-only" role="status">
+          Atualizando contratos...
+        </p>
+      )}
       {shown.length ? (
         <div className="table-wrap">
           <div
@@ -200,6 +155,7 @@ export function ContractCatalog({
                       <Link
                         className="contract-number"
                         href={`/contratos/${contract.id}/`}
+                        prefetch={false}
                       >
                         {contract.number}
                       </Link>
@@ -260,14 +216,13 @@ export function ContractCatalog({
           </div>
           <div className="pagination-footer">
             <span>
-              Mostrando {(page - 1) * 12 + 1} a{" "}
-              {Math.min(page * 12, filtered.length)} de{" "}
-              {filtered.length.toLocaleString("pt-BR")} contratos
+              Mostrando {(page - 1) * 12 + 1} a {Math.min(page * 12, count)} de{" "}
+              {count.toLocaleString("pt-BR")} contratos
             </span>
             <div className="pagination-buttons">
               <button
-                onClick={() => setPage(page - 1)}
-                disabled={page === 1}
+                onClick={() => changePage(page - 1)}
+                disabled={pending || page === 1}
                 aria-label="Página anterior"
               >
                 Anterior
@@ -276,8 +231,8 @@ export function ContractCatalog({
                 Página {page} de {pages}
               </span>
               <button
-                onClick={() => setPage(page + 1)}
-                disabled={page === pages}
+                onClick={() => changePage(page + 1)}
+                disabled={pending || page === pages}
                 aria-label="Próxima página"
               >
                 Próxima

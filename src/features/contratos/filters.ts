@@ -39,6 +39,13 @@ export function filterContracts(
   const words = searchKey(filters.q.trim()).split(/\s+/).filter(Boolean);
   return contracts
     .filter((contract) => {
+      if (
+        (filters.year && String(contract.year) !== filters.year) ||
+        (filters.org && contract.organization !== filters.org) ||
+        (filters.status && contract.status !== filters.status)
+      )
+        return false;
+      if (!words.length) return true;
       const haystack = searchKey(
         [
           contract.number,
@@ -52,12 +59,7 @@ export function filterContracts(
           ]),
         ].join(" "),
       );
-      return (
-        words.every((word) => haystack.includes(word)) &&
-        (!filters.year || String(contract.year) === filters.year) &&
-        (!filters.org || contract.organization === filters.org) &&
-        (!filters.status || contract.status === filters.status)
-      );
+      return words.every((word) => haystack.includes(word));
     })
     .sort((a, b) => {
       if (filters.sort === "value") {
