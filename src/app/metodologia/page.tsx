@@ -7,6 +7,7 @@ import { revenueSnapshot } from "@/features/receitas/data";
 import { dateLabel } from "@/lib/display";
 import { FigmaAsset } from "@/components/FigmaAsset";
 import { oldWorkCount } from "@/lib/work-presentation";
+import { DisclosureAnchors } from "@/components/DisclosureAnchors";
 export const metadata: Metadata = { title: "Fontes e método" };
 
 function SourceCard({ source }: { source: (typeof snapshot.sources)[number] }) {
@@ -69,6 +70,7 @@ export default function Method() {
   const old = oldWorkCount(latestWorks, snapshot.generatedAt);
   return (
     <main id="conteudo" className="container page-main method-page">
+      <DisclosureAnchors />
       <header className="method-heading">
         <h1 className="page-title">Fontes e método</h1>
         <p className="page-intro">

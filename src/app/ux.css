@@ -494,6 +494,10 @@ summary,
   border-radius: 12px;
 }
 .work-card h2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
   font-size: 19px;
   line-height: 1.4;
   margin: 12px 0 8px;

@@ -16,7 +16,11 @@ export function workTitle(value: string) {
     .replace(/^(?:obras e )?serviços de engenharia para\s+/i, "")
     .replace(/^obras e serviços de\s+/i, "")
     .replace(/^serviços de\s+/i, "")
-    .replace(/^realização de\s+/i, "");
+    .replace(/^realização de\s+/i, "")
+    .replace(/\s*[–—]\s*(?:r\.|rua\b|av\.)[\s\S]+$/i, "")
+    .replace(/\s*\((?:r\.|rua\b|av\.)[^)]*\)/gi, "")
+    .replace(/\s+em porto velho\/ro\b/gi, "")
+    .trim();
   return sentenceCase(short || value);
 }
 

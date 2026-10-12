@@ -138,10 +138,13 @@ export function WorkList({
     >
       {!home && (
         <div className="search-panel work-search">
-          <label className="search-field">
+          <div className="search-field">
             <Search size={20} aria-hidden="true" />
-            <span className="sr-only">Buscar obra ou localização</span>
+            <label className="sr-only" htmlFor="work-search">
+              Buscar obra ou localização
+            </label>
             <input
+              id="work-search"
               type="search"
               value={filters.q}
               placeholder="Buscar obra ou localização"
@@ -157,12 +160,15 @@ export function WorkList({
                 type="button"
                 className="search-clear"
                 aria-label="Limpar busca"
-                onClick={() => update({ q: "" })}
+                onClick={() => {
+                  update({ q: "" });
+                  document.getElementById("work-search")?.focus();
+                }}
               >
                 <X size={18} aria-hidden="true" />
               </button>
             )}
-          </label>
+          </div>
           <p id="work-search-help" className="search-help">
             Também busca contratos e empresas. Ex.: Flamboyant ou União
             Bandeirantes.

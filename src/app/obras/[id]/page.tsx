@@ -261,7 +261,7 @@ export default async function WorkDetail({
             <dd>{dateLabel(work.contractEndsAt)}</dd>
           </div>
           <div>
-            <dt>Vigência do convênio</dt>
+            <dt>Fim da vigência do convênio</dt>
             <dd>{dateLabel(work.agreementEndsAt)}</dd>
           </div>
           <div>
