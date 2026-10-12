@@ -58,12 +58,12 @@ do catálogo por execução. O estado atual e as versões efetivamente alteradas
 preservam os dados necessários ao histórico.
 
 Os arquivos `data/contracts-snapshot.json` e `data/exports/contratos.json`
-contêm a mesma base normalizada. `npm run data:export` lê obras e contratos do
-Supabase e impede a publicação se qualquer módulo obrigatório não tiver coleta válida.
+contêm a mesma base normalizada. `npm run data:export` é uma exportação local
+opcional dos três módulos e exige coleta válida; não participa do deploy.
 
-O workflow foi atualizado para executar obras, contratos e exportação antes dos
-testes/build/deploy. O agendamento só passa a coletar contratos quando essa alteração
-for enviada à branch principal; o módulo ainda não foi publicado por esta implementação.
+O workflow `sync-data.yml` coleta obras, contratos e receitas somente por
+acionamento manual em **Actions → Atualizar base de dados → Run workflow**.
+O deploy usa a base existente e não executa coleta nem exportação.
 
 Uso local com as credenciais existentes em `.env.local`, ignorado pelo Git:
 

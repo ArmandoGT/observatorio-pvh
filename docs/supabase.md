@@ -1,4 +1,4 @@
-# Persistência e atualização automática
+# Persistência e atualização dos dados
 
 Fluxo: `API municipal → coletor Node.js → Supabase → servidor Next.js no Worker → site`. Páginas e downloads consultam o estado persistido durante cada requisição; busca e filtros continuam no navegador. O servidor exige `SUPABASE_URL` e `SUPABASE_SECRET_KEY`, sem expor credenciais ao visitante. Consulte [a configuração Cloudflare/OpenNext](cloudflare.md).
 
@@ -35,12 +35,12 @@ A consulta remota confirmou RLS nas seis tabelas, ausência de acesso de `anon` 
 
 A primeira coleta real pelo cliente Supabase foi concluída com `status=ok` em 11/10/2026, criando a revisão 2: 48 obras e 47 contratos, sem alterações de conteúdo e sem duplicar as versões. A exportação via Data API também foi validada. O catálogo de dados abertos continuou respondendo HTTP 502; obras e contratos vieram da API municipal.
 
-Os quatro Actions secrets foram cadastrados no repositório. O token Cloudflare `observatorio-pvh GitHub Actions` tem somente Workers Scripts: Edit na conta utilizada, aceita os IPs variáveis dos runners e expira em **09/01/2027** (90 dias). Renove o token e atualize `CLOUDFLARE_API_TOKEN` antes do vencimento para manter as publicações funcionando. A primeira execução do workflow deve confirmar coleta, validação e publicação remotas.
+Os quatro Actions secrets foram cadastrados no repositório. O token Cloudflare `observatorio-pvh GitHub Actions` tem somente Workers Scripts: Edit na conta utilizada, aceita os IPs variáveis dos runners e expira em **09/01/2027** (90 dias). Renove o token e atualize `CLOUDFLARE_API_TOKEN` antes do vencimento para manter as publicações funcionando. Coleta e publicação são verificadas em workflows independentes.
 
 1. Criar `observatorio-pvh` na organização `Santi`, preferencialmente na região São Paulo. Conferir o plano e o custo no painel antes da criação.
 2. Aplicar a migração ao projeto novo e verificar as seis tabelas e as duas RPCs.
 3. Configurar `SUPABASE_URL` e uma **secret key de servidor** no ambiente da coleta. A chave legada `service_role` também é aceita; chaves públicas são rejeitadas.
-4. Executar as coletas, testes, typecheck, `npm run build:cloudflare` e deploy. A exportação local é opcional.
+4. Popular a base inicial quando necessário. Depois, publicar com testes, typecheck, `npm run build:cloudflare` e deploy, usando a base existente. Coleta e exportação local não são etapas da publicação.
 
 Use `.env.example` como referência. O script não carrega `.env` automaticamente. No Node.js 24, para uso local com `.env.local` ignorado pelo Git:
 
@@ -53,21 +53,23 @@ Sem variáveis Supabase, `npm run sync` mantém o modo local. Se qualquer variá
 
 ## GitHub Actions
 
-`.github/workflows/update-data.yml` agenda uma coleta diária às **06:17 em America/Cuiaba e Porto Velho** (10:17 UTC) e também executa após push em `main`. GitHub pode atrasar a execução; o horário não é um SLA. O workflow precisa estar na branch padrão para o agendamento funcionar. Há também execução manual em **Actions → Atualizar dados e publicar observatório → Run workflow**. Se a branch padrão mudar, ajuste o filtro de push.
+`.github/workflows/deploy.yml` publica o código após push em `main` e permite execução manual em **Actions → Publicar observatório → Run workflow**. O deploy valida o código, constrói OpenNext, configura os secrets do Worker e publica usando a base existente, sem executar sync.
+
+`.github/workflows/sync-data.yml` atualiza a base somente por acionamento em **Actions → Atualizar base de dados → Run workflow**. Valida o código e coleta obras, contratos e receitas para o Supabase, sem construir ou publicar o site. Não há agendamento automático. Os dois workflows só executam na branch padrão; se ela mudar, ajuste também o filtro de push do deploy.
 
 Cadastre estes **Actions secrets** em `santidev95/observatorio-pvh`:
 
 | Nome | Uso |
 | --- | --- |
 | `SUPABASE_URL` | URL do projeto novo |
-| `SUPABASE_SECRET_KEY` | Credencial de servidor para o coletor |
+| `SUPABASE_SECRET_KEY` | Credencial do coletor e do servidor do site |
 | `CLOUDFLARE_ACCOUNT_ID` | Conta do Worker `observatorio-pvh` |
 | `CLOUDFLARE_API_TOKEN` | Token com Workers Scripts: Edit na conta utilizada |
 | `PMPV_API_TOKEN` | Opcional; atualmente a API municipal permite acesso anônimo |
 
 O token GitHub tem somente `contents: read`; nenhum snapshot ou segredo é commitado automaticamente. As credenciais Supabase ficam nos passos de coleta e configuração dos secrets do Worker, nunca no build Next.js nem no cliente. As credenciais Cloudflare ficam nos passos de configuração e deploy. A verificação inicial imprime somente nomes de secrets ausentes.
 
-Execuções são serializadas sem cancelar coletas em andamento. O site consulta cada estado assim que ele é persistido. Coletas parciais ou falhas da origem preservam a última base válida e seu aviso. Falha de leitura do banco resulta no estado de erro da página, sem arquivos locais. A execução agendada não faz build/deploy; pushes e execuções manuais publicam o código após validação. Testes posteriores à persistência não desfazem os dados já gravados.
+Coletas manuais são serializadas sem cancelar execuções em andamento; a publicação usa um grupo de concorrência separado. O site consulta cada estado assim que ele é persistido. Coletas parciais ou falhas da origem preservam a última base válida e seu aviso. Falha de leitura do banco resulta no estado de erro da página, sem arquivos locais. O workflow de coleta valida o código antes de persistir e não faz build/deploy; o workflow de publicação não executa coletores. A persistência é transacional por módulo, sem transação conjunta entre os três módulos.
 
 ## Publicações fora do workflow
 
@@ -77,8 +79,8 @@ Se Workers Builds continuar ativo, um push pode gerar uma publicação concorren
 
 Na implantação de 11/10/2026, a opção **Disable builds** foi ativada e salva em **Workers → observatorio-pvh → Settings → Compilações → Produção**, preservando a conexão com o repositório. Para restaurar os builds da Cloudflare, desative essa opção; primeiro ajuste os comandos para OpenNext e configure os secrets do runtime.
 
-Um arquivo local não comprova agendamento ativo: é necessário enviá-lo ao GitHub, configurar os secrets e completar uma execução real. Banco e migração também são etapas remotas separadas.
+Os workflows precisam chegar à branch padrão para seus botões e gatilhos ficarem disponíveis no GitHub. A validação local não comprova execução remota. Banco e migração também são etapas remotas separadas.
 
-Falhas da origem ficam em `ingestion_runs`. Falhas de rede com Supabase ficam nos logs do GitHub, pois um banco indisponível não pode registrar sua própria falha. Coletar diariamente não garante que a prefeitura publique dados novos diariamente. Novos módulos terão coletores e esquemas próprios; `obras-pvh` isola o estado atual. CGE não foi integrada.
+Falhas da origem ficam em `ingestion_runs`. Falhas de rede com Supabase ficam nos logs do GitHub, pois um banco indisponível não pode registrar sua própria falha. Acionar a coleta não garante que a prefeitura tenha publicado dados novos. Novos módulos terão coletores e esquemas próprios; `obras-pvh` isola o estado atual. CGE não foi integrada.
 
-Referências: [RPCs](https://supabase.com/docs/reference/javascript/rpc), [acesso seguro](https://supabase.com/docs/guides/database/secure-data), [workflows agendados](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onschedule).
+Referências: [RPCs](https://supabase.com/docs/reference/javascript/rpc), [acesso seguro](https://supabase.com/docs/guides/database/secure-data), [workflows manuais](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow).

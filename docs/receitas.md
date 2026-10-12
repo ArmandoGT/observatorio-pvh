@@ -41,7 +41,7 @@ Versões são criadas somente quando o conteúdo contábil ou a presença no rec
 
 A migração e a base inicial foram aplicadas ao projeto `observatorio-pvh`; a consulta remota confirmou 2.402 resumos, estado `ok` e RPC indisponível para `anon`. O advisor apresentou somente o aviso informativo [RLS enabled without policies](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy), intencional neste schema privado sem acesso público.
 
-O workflow executa `obras → contratos → receitas → exportação → testes → build → publicação`. `data:export` exige estado válido dos três módulos. A rotina diária com receitas só passa a rodar após estas alterações chegarem ao GitHub; este trabalho não publica o site automaticamente.
+O workflow manual `sync-data.yml` executa `testes → typecheck → obras → contratos → receitas`, sem build ou publicação. O deploy é independente e usa a base já persistida. `data:export` é uma exportação local opcional e exige estado válido dos três módulos. Não há coleta agendada; as alterações dos workflows passam a valer quando chegarem à branch principal.
 
 ## Validação em 12/10/2026
 

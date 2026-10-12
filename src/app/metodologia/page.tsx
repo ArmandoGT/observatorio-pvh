@@ -288,8 +288,7 @@ export default async function Method() {
               </li>
               <li>
                 A periodicidade de publicação municipal não foi confirmada. A
-                sincronização é programada diariamente às 06:17, no horário de
-                Porto Velho, e também pode ser acionada manualmente. A base
+                sincronização é acionada manualmente quando necessário. A base
                 persistida é consultada a cada acesso, sem nova construção após
                 a coleta.
               </li>

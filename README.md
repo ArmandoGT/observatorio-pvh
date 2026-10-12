@@ -34,7 +34,7 @@ npm start
 
 ## Atualizar dados
 
-O coletor persiste no Supabase, guardando o histórico. O site consulta essa base a cada acesso, sem exportação nem rebuild após a coleta. O workflow `.github/workflows/update-data.yml` coleta diariamente às 06:17 de Porto Velho; pushes em `main` e execuções manuais também publicam o código. Consulte [persistência e operação com Supabase](docs/supabase.md).
+O coletor persiste no Supabase, guardando o histórico. O site consulta essa base a cada acesso, sem exportação nem rebuild após a coleta. O workflow `.github/workflows/deploy.yml` publica o código após pushes em `main` ou acionamento manual, usando a base existente. A coleta é independente e acontece somente quando acionada em **Actions → Atualizar base de dados → Run workflow** (`.github/workflows/sync-data.yml`). Não há coleta agendada nem sync durante o deploy. Consulte [persistência e operação com Supabase](docs/supabase.md).
 
 ```sh
 npm run sync

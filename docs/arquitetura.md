@@ -58,8 +58,9 @@ continuam disponiveis para bootstrap, auditoria e operacao local dos
 coletores. Nao ficam em `public/` e nao participam da renderizacao do site.
 `data:export` e uma ferramenta opcional de exportacao, nao uma etapa do deploy.
 
-O workflow coleta os tres modulos diariamente e valida os resultados. Uma
-execucao agendada nao recompila o site; a proxima requisicao ja consulta o
-estado persistido. Push em `main` e execucao manual empacotam OpenNext,
-configuram secrets do Worker e publicam. Consulte [operacao](supabase.md) e
-[hospedagem](cloudflare.md).
+O workflow manual `sync-data.yml` valida o codigo e coleta os tres modulos
+somente quando necessario. A proxima requisicao ja consulta o estado
+persistido, sem recompilar o site. O workflow independente `deploy.yml`
+empacota OpenNext, configura secrets do Worker e publica no push em `main`
+ou por acionamento manual, sem executar os coletores. Nao ha coleta agendada.
+Consulte [operacao](supabase.md) e [hospedagem](cloudflare.md).

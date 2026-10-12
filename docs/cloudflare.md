@@ -46,11 +46,12 @@ o Worker existente ate que uma publicacao seja executada.
 
 ## Atualizacao e desenvolvimento
 
-O workflow coleta os tres modulos diariamente as 06:17 de Porto Velho. A
-execucao agendada atualiza o banco e valida o resultado sem reconstruir ou
-publicar o site. Push em `main` e execucao manual tambem constroem e publicam
-o codigo. A integracao Workers Builds deve continuar desativada para evitar
-publicacoes concorrentes.
+O workflow `deploy.yml` constroi e publica o codigo no push em `main` ou
+por acionamento manual, usando os dados ja persistidos. O workflow separado
+`sync-data.yml` coleta os tres modulos somente quando acionado em
+**Actions > Atualizar base de dados > Run workflow**, sem build ou deploy.
+Nao ha coleta agendada. A integracao Workers Builds deve continuar desativada
+para evitar publicacoes concorrentes.
 
 Para Node.js, use `.env.local` com as variaveis de `.env.example` e execute
 `npm run dev` ou `npm run build` seguido de `npm start`.

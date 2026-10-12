@@ -118,11 +118,11 @@ export default function TermsPage() {
         <section id="limites" aria-labelledby="limites-heading">
           <h2 id="limites-heading">3. Atualização e limites das informações</h2>
           <p>
-            A coleta é programada diariamente. A publicação depende da
+            A coleta é acionada manualmente quando necessário e depende da
             disponibilidade das fontes e da conclusão das verificações. A data
             de coleta não significa que a prefeitura atualizou todos os
-            registros naquela data. Se a coleta falhar, a versão pública
-            anterior é preservada.
+            registros naquela data. Se a coleta falhar, a última base válida é
+            preservada.
           </p>
           <p>
             A base pode conter campos ausentes, informações antigas e
