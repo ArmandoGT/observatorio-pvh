@@ -5,7 +5,7 @@ Quer ajudar a melhorar o observatório? Consulte o [guia de contribuição](CONT
 O módulo **Receitas e orçamento** está implementado em `/receitas/`, com previsão anual, arrecadação mensal, filtros e acesso a LOA, LDO e PPA. Consulte [o recorte, a coleta e os limites](docs/receitas.md).
 
 O módulo **Contratos municipais** está implementado no código em `/contratos/`,
-com catálogo, fichas estáticas, documentos e vínculos por ID com as obras.
+com catálogo, fichas dinâmicas, documentos e vínculos por ID com as obras.
 Consulte [escopo, coleta e validação de contratos](docs/contratos.md).
 
 MVP cívico independente para consultar obras municipais, contratos associados e documentos oficiais. Next.js 16.4.0, React 19.3.0 e TypeScript. Interface baseada no Figma: tema escuro `#131313`, superfÃ­cies `#201F1F`, amarelo-ouro `#F2C230` e fonte Geist. Consulte [a aplicaÃ§Ã£o do design](docs/design-figma.md).
@@ -14,14 +14,14 @@ Obras é o primeiro módulo disponível. A identidade do portal e a navegação 
 
 ## Executar
 
-Requer Node.js 22 ou superior e npm. Não requer banco de dados, conta municipal ou token para a coleta atualmente validada.
+Requer Node.js 22 ou superior e npm. Configure `SUPABASE_URL` e `SUPABASE_SECRET_KEY` em `.env.local`, conforme `.env.example`. O site consulta o banco no servidor; nenhum segredo é enviado ao navegador.
 
 ```sh
 npm ci
 npm run dev
 ```
 
-Abra o endereço local mostrado no terminal. A base oficial coletada está incluída no projeto, portanto o site inicia mesmo sem acesso à internet.
+Abra o endereço local mostrado no terminal. A base oficial persistida no Supabase é consultada durante cada requisição. Os JSONs locais ficam disponíveis apenas para ingestão e auditoria.
 
 ```sh
 npm run typecheck
@@ -30,20 +30,19 @@ npm run build
 npm start
 ```
 
-`npm start` serve a exportação estática em `http://127.0.0.1:3000`. É um servidor de prévia local, não um servidor de produção. A hospedagem de produção deve servir `out/`, respeitando diretórios com `index.html` e `404.html`.
+`npm start` inicia o servidor Next.js em `http://127.0.0.1:3000` após o build. A produção usa Next.js no Cloudflare Workers com OpenNext.
 
 ## Atualizar dados
 
-O coletor persiste no Supabase, guardando o histórico e exportando a mesma base JSON para o site. O workflow `.github/workflows/update-data.yml` coleta e publica diariamente às 06:17 de Porto Velho, após pushes em `main` e por execução manual. Projeto, migração e secrets estão configurados: consulte [persistência e operação com Supabase](docs/supabase.md).
+O coletor persiste no Supabase, guardando o histórico. O site consulta essa base a cada acesso, sem exportação nem rebuild após a coleta. O workflow `.github/workflows/update-data.yml` coleta diariamente às 06:17 de Porto Velho; pushes em `main` e execuções manuais também publicam o código. Consulte [persistência e operação com Supabase](docs/supabase.md).
 
 ```sh
 npm run sync
 npm run sync:contracts
 npm run sync:revenues
-npm run build
 ```
 
-O comando percorre toda a paginação de `/api/v1/obras`, valida o total retornado, consulta os contratos pelo ID explícito e gera `data/snapshot.json` e `public/dados/obras.json`. Novos dados chegam à hospedagem estática após reconstrução e publicação pelo workflow. A coleta diária depende da disponibilidade das fontes e não representa atualização em tempo real.
+O comando percorre toda a paginação de `/api/v1/obras`, valida o total retornado, consulta os contratos pelo ID explícito e persiste o resultado no Supabase. Arquivos em `data/` e `data/exports/` são cópias locais de ingestão. A próxima requisição ao site recebe o estado do banco. A coleta diária depende da disponibilidade das fontes e não representa atualização em tempo real da Prefeitura.
 
 O armazenamento é incremental por ID e hash de conteúdo: primeira coleta, última alteração e registros ausentes são preservados. A leitura da API continua sendo uma varredura completa porque `/obras` não documenta filtro por atualização. Não se presume suporte a ETag, webhook ou cursor temporal.
 
@@ -67,7 +66,7 @@ Esses números descrevem esta coleta e podem mudar. Consulte o arquivo de fontes
 - Visão geral com cobertura das somas, sem tratar a base como orçamento atual ou censo municipal completo.
 - Busca por objeto, localização, contrato, processo e fornecedor; filtros por situação e órgão, ordenação e paginação.
 - URLs preservam busca e filtros. Bairro permanece indisponível porque a fonte não oferece campo padronizado.
-- 48 fichas estáticas com valores, contratos, vigências, medições, anexos, proveniência e limites de qualidade.
+- Fichas dinâmicas com valores, contratos, vigências, medições, anexos, proveniência e limites de qualidade, inclusive para novos IDs após a publicação.
 - Página de fontes e método, download JSON, estado sem resultados, estado sem base, falha de coleta e 404.
 - HTML semântico, labels, foco visível, link para pular ao conteúdo, resultados anunciados e respeito à preferência por movimento reduzido.
 
@@ -79,17 +78,19 @@ src/components/        navegação, consulta e situação
 src/lib/schema.ts      contrato validado em Zod
 src/lib/normalize.ts   formatos municipais → modelo local
 src/lib/sync-core.ts   merge, retenção histórica e paginação
-src/lib/data.ts        snapshot consumido no build
+src/lib/data.ts        obras consultadas no servidor
+src/lib/database.ts    leitura por requisição, protegida por server-only
 scripts/sync.ts        ingestão e auditoria das fontes
 scripts/probe*.mjs     reprodução da investigação pública
 data/snapshot.json     base normalizada e estado de coleta
 data/contracts.json    cache dos contratos vinculados
 data/raw/              respostas locais por hash (não publicadas)
-public/dados/          download da mesma base usada no site
+data/exports/          exportações locais para auditoria
+src/app/dados/         downloads da base persistida por requisição
 evidence/              relatórios HTTP e OpenAPI extraída
 docs/                  fontes, arquitetura, esquema e validação
 tests/                 testes dos contratos e comportamentos críticos
-out/                   exportação gerada (não versionada)
+.open-next/            Worker e assets gerados (não versionados)
 ```
 
 ## Método
@@ -108,8 +109,8 @@ Ver [fontes](docs/fontes.md), [arquitetura](docs/arquitetura.md), [esquema](docs
 
 ## Hospedagem
 
-Para publicar como aplicação no Cloudflare Workers, o projeto inclui `wrangler.jsonc` apontando para `out/` e Wrangler como ferramenta de desenvolvimento. Use build `npm run build` e deploy `npm run deploy`. Consulte [a configuração e o diagnóstico de deploy na Cloudflare](docs/cloudflare.md).
+Para publicar na Cloudflare Workers, execute `npm run build:cloudflare`, `npm run deploy:check` e `npm run deploy`. Configure as credenciais Supabase como secrets do Worker; o workflow atualizado faz isso usando os Actions secrets existentes. Consulte [a configuração Cloudflare/OpenNext](docs/cloudflare.md).
 
-O projeto gera uma exportação estática Next.js compatível com qualquer hospedagem estática. `.openai/hosting.json` identifica o Site do Work e declara `out/`. Não há dependência do serviço Sites para executar, coletar dados ou construir o projeto localmente.
+O projeto requer um servidor Next.js ou Worker OpenNext. A configuração histórica `.openai/hosting.json` de exportação estática não é usada nesta publicação.
 
-O código pode ser adaptado para execução com servidor Next.js retirando `output: 'export'`. A persistência PostgreSQL está disponível no coletor; o site público continua estático e não oferece uma API de escrita.
+Os JSONs não são consumidos pelas páginas. Não existe API pública de escrita; a ingestão continua nos coletores e no workflow.

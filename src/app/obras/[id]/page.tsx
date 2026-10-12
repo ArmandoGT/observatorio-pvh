@@ -2,8 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ArrowUpRight, FileText } from "lucide-react";
-import { snapshot } from "@/lib/data";
-import { contractsBySourceId } from "@/features/contratos/data";
+import { getWorksData } from "@/lib/data";
+import { getContractsData } from "@/features/contratos/data";
 import {
   contractLabel,
   currency,
@@ -18,18 +18,13 @@ import { DetailTabs } from "@/components/DetailTabs";
 import { BackToWorks } from "@/components/BackToWorks";
 import { workTitle, groupWorkDocuments } from "@/lib/work-presentation";
 
-export const dynamicParams = false;
-export function generateStaticParams() {
-  return snapshot.works.length
-    ? snapshot.works.map((work) => ({ id: work.id }))
-    : [{ id: "base-indisponivel" }];
-}
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
+  const { snapshot } = await getWorksData();
   return {
     title:
       snapshot.works.find((work) => work.id === id)?.title ??
@@ -42,6 +37,10 @@ export default async function WorkDetail({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const [{ snapshot }, { contractsBySourceId }] = await Promise.all([
+    getWorksData(),
+    getContractsData(),
+  ]);
   const { id } = await params,
     work = snapshot.works.find((item) => item.id === id);
   if (!snapshot.works.length && id === "base-indisponivel")

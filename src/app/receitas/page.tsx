@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { RevenueDashboard } from "@/features/receitas/Dashboard";
-import { revenueSnapshot } from "@/features/receitas/data";
+import { getRevenueData } from "@/features/receitas/data";
 import { ArrowUpRight } from "lucide-react";
 export const metadata: Metadata = {
   title: "Receitas e orçamento",
@@ -27,7 +27,8 @@ const documents = [
     href: "https://transparencia.portovelho.ro.gov.br/arquivos?pasta=168",
   },
 ];
-export default function RevenuePage() {
+export default async function RevenuePage() {
+  const { revenueSnapshot } = await getRevenueData();
   return (
     <main id="conteudo" className="container page-main revenue-page">
       <h1 className="page-title">Receitas e orçamento</h1>
@@ -41,7 +42,13 @@ export default function RevenuePage() {
           A última coleta de receitas falhou. Exibimos a última base válida.
         </div>
       )}
-      <RevenueDashboard snapshot={revenueSnapshot} />
+      {revenueSnapshot.years.length ? (
+        <RevenueDashboard snapshot={revenueSnapshot} />
+      ) : (
+        <div className="notice" role="status">
+          Nenhum exercício de receitas está disponível na base consultada.
+        </div>
+      )}
       <section
         className="revenue-panel"
         aria-labelledby="budget-documents-heading"

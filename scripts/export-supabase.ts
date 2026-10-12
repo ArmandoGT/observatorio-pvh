@@ -32,11 +32,11 @@ if (!state.snapshot || !["ok", "partial"].includes(state.snapshot.syncStatus))
 for (const [path, data] of [
   ["data/snapshot.json", state.snapshot],
   ["data/contracts.json", state.contracts],
-  ["public/dados/obras.json", state.snapshot],
+  ["data/exports/obras.json", state.snapshot],
   ["data/contracts-snapshot.json", contractState.snapshot],
-  ["public/dados/contratos.json", contractState.snapshot],
+  ["data/exports/contratos.json", contractState.snapshot],
   ["data/revenues-snapshot.json", revenueState.snapshot],
-  ["public/dados/receitas.json", revenueState.snapshot],
+  ["data/exports/receitas.json", revenueState.snapshot],
 ] as const) {
   await mkdir(dirname(path), { recursive: true });
   await writeFile(`${path}.tmp`, JSON.stringify(data, null, 2) + "\n");

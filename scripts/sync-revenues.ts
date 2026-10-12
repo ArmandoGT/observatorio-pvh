@@ -37,8 +37,8 @@ let revision = 0;
 let persistenceReady = false;
 let collected = false;
 async function exportSnapshot(snapshot: RevenueSnapshot) {
-  for (const destination of [path, resolve("public/dados/receitas.json")]) {
-    await mkdir(resolve("public/dados"), { recursive: true });
+  for (const destination of [path, resolve("data/exports/receitas.json")]) {
+    await mkdir(resolve("data/exports"), { recursive: true });
     await writeFile(
       `${destination}.tmp`,
       JSON.stringify(snapshot, null, 2) + "\n",

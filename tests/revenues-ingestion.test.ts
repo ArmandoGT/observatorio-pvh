@@ -131,7 +131,7 @@ test("receitas: coletor real, RPC transacional, repetição, falha parcial, conc
     assert.equal(first.entries[0].plannedCents, 100000);
     assert.deepEqual(
       JSON.parse(
-        await readFile(join(folder, "public/dados/receitas.json"), "utf8"),
+        await readFile(join(folder, "data/exports/receitas.json"), "utf8"),
       ),
       first,
     );

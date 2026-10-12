@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { worksModule } from "@/lib/observatory";
-import { snapshot, latestWorks } from "@/lib/data";
+import { getWorksData } from "@/lib/data";
 import { currency, dateLabel, sumKnown } from "@/lib/display";
 import { FigmaAsset } from "@/components/FigmaAsset";
 
-export function ObrasOverview() {
+export async function ObrasOverview() {
+  const { snapshot, latestWorks } = await getWorksData();
   return (
     <article className="module-card" aria-labelledby="obras-heading">
       <h2 id="obras-heading">{worksModule.title}</h2>
@@ -20,7 +21,8 @@ export function ObrasOverview() {
   );
 }
 
-export function ObrasSummary() {
+export async function ObrasSummary() {
+  const { snapshot, latestWorks } = await getWorksData();
   const contracted = sumKnown(latestWorks, "contractedCents"),
     paid = sumKnown(latestWorks, "paidCents");
   return (

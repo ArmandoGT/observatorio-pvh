@@ -33,9 +33,9 @@ As pastas de planejamento são links para a documentação oficial. Não extraí
 npm run sync:revenues
 ```
 
-Sem configuração Supabase, o comando valida as duas fontes e escreve `data/revenues-snapshot.json` e `public/dados/receitas.json`. Ambos contêm os mesmos resumos normalizados. A coleta usa a política compartilhada de intervalos, timeout e HTTP 429 descrita em [contratos](contratos.md#persistência-e-atualização).
+Sem configuração Supabase, o comando valida as duas fontes e escreve `data/revenues-snapshot.json` e `data/exports/receitas.json`. Ambos contêm os mesmos resumos normalizados para operação local. O site exige Supabase e consulta o estado persistido no servidor. A coleta usa a política compartilhada de intervalos, timeout e HTTP 429 descrita em [contratos](contratos.md#persistência-e-atualização).
 
-Com as credenciais de manutenção, o módulo privado `receitas-pvh` persiste em `observatory.revenue_entries` e `revenue_versions`, usando `module_state`, `ingestion_runs` e `sources` já existentes. A RPC de escrita usa transação, lock por módulo, revisão esperada e ID de execução idempotente. RLS e permissões impedem leitura/escrita por `anon` e `authenticated`; o site continua estático e sem chave Supabase no navegador.
+Com as credenciais de manutenção, o módulo privado `receitas-pvh` persiste em `observatory.revenue_entries` e `revenue_versions`, usando `module_state`, `ingestion_runs` e `sources` já existentes. A RPC de escrita usa transação, lock por módulo, revisão esperada e ID de execução idempotente. RLS e permissões impedem leitura/escrita por `anon` e `authenticated`; o site consulta a base no servidor, sem chave Supabase no navegador.
 
 Versões são criadas somente quando o conteúdo contábil ou a presença no recorte muda. A tentativa guarda metadados e hash; não duplica todos os resumos a cada execução. Falha parcial preserva valores, cobertura e data da última coleta completa. Coleta incompleta, total variável e fonte inesperadamente vazia impedem substituir a base.
 

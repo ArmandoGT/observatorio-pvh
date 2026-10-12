@@ -1,51 +1,66 @@
-# Publicação na Cloudflare
+# Publicacao na Cloudflare
 
-O Observatório usa `output: "export"` no Next.js. `npm run build` gera HTML, JavaScript, CSS e dados em `out/`. Essa versão pode ser publicada como arquivos estáticos de um Worker, sem adaptador OpenNext ou servidor Next.js.
+O Observatorio executa Next.js no Worker `observatorio-pvh`, usando OpenNext.
+Paginas de dados e downloads consultam Supabase durante a requisicao. O dominio
+continua sendo `pvh.dadosabertos.org`. A publicacao nao usa mais `out/`.
 
-## Publicação pelo GitHub Actions
-
-Produção usa `.github/workflows/update-data.yml` para coletar, persistir no Supabase, exportar os dados, validar e publicar no Worker existente. A opção **Disable builds** da integração Git da Cloudflare está ativada para evitar publicações concorrentes de snapshots antigos. Consulte [secrets, agendamento e operação](supabase.md).
-
-## Alternativa: Workers com integração Git
-
-Inclua `wrangler.jsonc`, `package.json` e `package-lock.json` no repositório conectado à Cloudflare. Em **Settings > Build**, configure:
-
-| Campo | Valor |
-| --- | --- |
-| Diretório raiz | Raiz deste projeto |
-| Comando de build | `npm run build` |
-| Comando de deploy | `npm run deploy` |
-
-O comando existente `npx wrangler deploy` também funciona, pois utiliza o Wrangler instalado pelo lockfile. O nome configurado é `observatorio-pvh`, correspondente ao Worker do log de 11/10/2026. Caso o Worker tenha outro nome, ajuste `name` em `wrangler.jsonc`.
-
-O Wrangler está fixado como dependência de desenvolvimento. A instalação do build deve incluir as dependências de desenvolvimento. `out/` é gerado pelo build e permanece fora do Git.
-
-`assets.directory` aponta para `out/`; `html_handling` preserva as barras finais usadas pelo Next.js; `not_found_handling` serve `404.html` com status 404 para páginas ausentes. Não há ponto de entrada `main`, pois esta publicação contém apenas arquivos estáticos.
-
-## Validar localmente
+## Build e publicacao
 
 ```sh
 npm ci
-npm run build
+npm test
+npm run typecheck
+npm run build:cloudflare
 npm run deploy:check
+npm run deploy
 ```
 
-O último comando valida a configuração sem publicar. Para publicar manualmente, com autenticação Cloudflare já configurada, execute `npm run deploy`.
+`build:cloudflare` executa `next build` e empacota `.open-next/worker.js` e
+`.open-next/assets`. `deploy:check` valida o pacote sem publicar. `deploy`
+publica o pacote ja construido e preserva variaveis configuradas no painel.
+Execute `build:cloudflare` antes de `deploy` depois de alterar o codigo.
 
-## Falha de detecção automática
+O pacote OpenNext 1.20.10 precisa incluir `preview-props.json` para Next.js
+16.4. O patch em `patches/` acrescenta esse manifesto ao glob do adaptador e
+e aplicado automaticamente por `postinstall`, inclusive em `npm ci`.
+O build interrompe se o patch nao puder ser aplicado. Remova o patch quando
+uma versao oficial incorporar [a correcao upstream](https://github.com/opennextjs/opennextjs-cloudflare/pull/1356),
+apos validar o runtime novamente.
 
-No log de 11/10/2026, o build Next.js terminou com sucesso, mas `npx wrangler deploy` não encontrou configuração. A detecção automática tentou converter o projeto para OpenNext, apontou para `.next` e falhou procurando `.next/standalone/.next/server/pages-manifest.json`.
+`wrangler.jsonc` declara `nodejs_compat`, assets e o binding de referencia ao
+proprio Worker. As rotas e seus status HTTP sao tratados pelo servidor Next.js.
+Nao existe lista de IDs gerada no build: novos registros e registros historicos
+podem ser consultados diretamente pelas URLs de detalhe.
 
-O projeto gera `out/`, não um servidor standalone. A configuração explícita de arquivos estáticos evita essa migração automática. Preserve `output: "export"` e o comando `build: next build`; o fluxo atual não usa `opennextjs-cloudflare build` ou `opennextjs-cloudflare deploy`.
+## Credenciais do servidor
 
-## Alternativa: Pages
+Configure `SUPABASE_URL` e `SUPABASE_SECRET_KEY` como secrets do Worker. A chave
+de servidor nunca deve ter prefixo `NEXT_PUBLIC_`. O schema privado, RLS e as
+RPCs restritas a `service_role` permanecem protegidos. O site so chama a RPC de
+leitura e nao publica uma API de gravacao.
 
-No Cloudflare Pages, use build `npm run build` e diretório de saída `out`. Pages não precisa de comando `wrangler deploy` para publicação pela integração Git.
+No GitHub Actions, os secrets existentes sao enviados ao Worker pelo passo
+`wrangler secret bulk`, sem arquivo versionado nem valores nos logs. O build
+nao recebe credenciais Supabase. A alteracao local do workflow nao configura
+o Worker existente ate que uma publicacao seja executada.
 
-## Domínio e atualização dos dados
+## Atualizacao e desenvolvimento
 
-O domínio personalizado `pvh.dadosabertos.org` está associado ao Worker `observatorio-pvh`.
+O workflow coleta os tres modulos diariamente as 06:17 de Porto Velho. A
+execucao agendada atualiza o banco e valida o resultado sem reconstruir ou
+publicar o site. Push em `main` e execucao manual tambem constroem e publicam
+o codigo. A integracao Workers Builds deve continuar desativada para evitar
+publicacoes concorrentes.
 
-Os dados são coletados por `npm run sync`. O workflow diário exporta a base persistida antes de construir e publicar o site. Configurar apenas a hospedagem não cria um agendamento de coleta.
+Para Node.js, use `.env.local` com as variaveis de `.env.example` e execute
+`npm run dev` ou `npm run build` seguido de `npm start`.
+Para conferir o runtime Workers, execute `npm run build:cloudflare` seguido de
+`npm run preview`; Wrangler carrega explicitamente `.env.local` como
+variaveis locais do Worker. Esse arquivo permanece fora do Git.
 
-Referências: [arquivos estáticos e 404 em Workers](https://developers.cloudflare.com/workers/static-assets/routing/static-site-generation/), [Next.js estático no Pages](https://developers.cloudflare.com/pages/framework-guides/nextjs/deploy-a-static-nextjs-site/).
+Falha da prefeitura preserva o ultimo estado valido no banco e seu aviso de
+coleta. Falha de acesso ao Supabase mostra o estado de erro da pagina; downloads
+retornam 503. Nao ha fallback silencioso para arquivos antigos.
+
+Referencias: [OpenNext](https://opennext.js.org/cloudflare/get-started),
+[variaveis de ambiente](https://opennext.js.org/cloudflare/howtos/env-vars).

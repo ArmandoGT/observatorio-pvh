@@ -84,7 +84,7 @@ test("coletor e exportação usam o estado persistido e bloqueiam publicação a
       );
     await db.exec("set role service_role");
     await mkdir(join(folder, "data"));
-    await mkdir(join(folder, "public/dados"), { recursive: true });
+    await mkdir(join(folder, "data/exports"), { recursive: true });
     await writeFile(
       join(folder, "data/snapshot.json"),
       JSON.stringify(baseline),
@@ -197,7 +197,7 @@ test("coletor e exportação usam o estado persistido e bloqueiam publicação a
     assert.deepEqual((await load()).snapshot, saved);
     assert.deepEqual(
       JSON.parse(
-        await readFile(join(folder, "public/dados/obras.json"), "utf8"),
+        await readFile(join(folder, "data/exports/obras.json"), "utf8"),
       ),
       saved,
     );

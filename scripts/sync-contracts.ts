@@ -35,8 +35,8 @@ let persistenceReady = false;
 let sourceCollected = false;
 const request = createSourceRequester();
 async function exportSnapshot(snapshot: ContractSnapshot) {
-  for (const destination of [path, resolve("public/dados/contratos.json")]) {
-    await mkdir(resolve("public/dados"), { recursive: true });
+  for (const destination of [path, resolve("data/exports/contratos.json")]) {
+    await mkdir(resolve("data/exports"), { recursive: true });
     await writeFile(
       `${destination}.tmp`,
       JSON.stringify(snapshot, null, 2) + "\n",

@@ -266,8 +266,8 @@ try {
   await atomic(resolve(dataDir, "raw", `${stableHash(raw)}.json`), raw);
   await atomic(resolve(dataDir, "contracts.json"), contractCache);
   await atomic(snapshotPath, snapshot);
-  await mkdir(resolve("public", "dados"), { recursive: true });
-  await atomic(resolve("public", "dados", "obras.json"), snapshot);
+  await mkdir(resolve(dataDir, "exports"), { recursive: true });
+  await atomic(resolve(dataDir, "exports", "obras.json"), snapshot);
   console.log(
     JSON.stringify(
       {
@@ -307,8 +307,8 @@ try {
       startedAt: attemptedAt,
     });
   await atomic(snapshotPath, previous);
-  await mkdir(resolve("public", "dados"), { recursive: true });
-  await atomic(resolve("public", "dados", "obras.json"), previous);
+  await mkdir(resolve(dataDir, "exports"), { recursive: true });
+  await atomic(resolve(dataDir, "exports", "obras.json"), previous);
   console.error(`Sincronização falhou; última base preservada: ${message}`);
   process.exitCode = 1;
 } finally {

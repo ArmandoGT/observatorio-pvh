@@ -140,7 +140,7 @@ test("receitas: download coincide com o snapshot e a contagem de documentos e pr
     JSON.parse(await readFile("data/revenues-snapshot.json", "utf8")),
   );
   assert.deepEqual(
-    JSON.parse(await readFile("public/dados/receitas.json", "utf8")),
+    JSON.parse(await readFile("data/exports/receitas.json", "utf8")),
     snapshot,
   );
   assert.equal(

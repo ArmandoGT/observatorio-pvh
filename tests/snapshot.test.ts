@@ -18,8 +18,8 @@ test("published snapshot validates, uses unique official IDs and includes tracea
     assert.equal(w.neighborhood, null);
   }
 });
-test("download matches the snapshot used to build pages", async () => {
+test("local export matches the ingestion snapshot", async () => {
   const built = JSON.parse(await readFile("data/snapshot.json", "utf8")),
-    download = JSON.parse(await readFile("public/dados/obras.json", "utf8"));
+    download = JSON.parse(await readFile("data/exports/obras.json", "utf8"));
   assert.deepEqual(download, built);
 });

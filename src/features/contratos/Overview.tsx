@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { contractsModule } from "@/lib/observatory";
-import { latestContracts, contractSnapshot } from "./data";
+import { getContractsData } from "./data";
 import { dateLabel } from "@/lib/display";
-export function ContractsOverview() {
+export async function ContractsOverview() {
+  const { latestContracts, contractSnapshot } = await getContractsData();
   return (
     <section className="module-card" aria-labelledby="contracts-heading">
       <h2 id="contracts-heading">{contractsModule.title}</h2>

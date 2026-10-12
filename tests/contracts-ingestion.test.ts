@@ -167,7 +167,7 @@ test("contratos: coleta paginada, limite HTTP 429, persistência, falha parcial,
     await run("export-supabase.ts");
     assert.deepEqual(
       JSON.parse(
-        await readFile(join(folder, "public/dados/contratos.json"), "utf8"),
+        await readFile(join(folder, "data/exports/contratos.json"), "utf8"),
       ),
       first,
     );
@@ -220,7 +220,7 @@ test("contratos: coleta paginada, limite HTTP 429, persistência, falha parcial,
     assert.equal(failed.generatedAt, state.snapshot!.generatedAt);
     assert.deepEqual(
       JSON.parse(
-        await readFile(join(folder, "public/dados/contratos.json"), "utf8"),
+        await readFile(join(folder, "data/exports/contratos.json"), "utf8"),
       ),
       failed,
     );

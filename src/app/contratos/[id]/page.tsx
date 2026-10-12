@@ -2,21 +2,16 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ArrowUpRight, FileText } from "lucide-react";
-import { snapshot } from "@/lib/data";
+import { getWorksData } from "@/lib/data";
 import { currency, dateLabel } from "@/lib/display";
-import { contractsById, contractSnapshot } from "@/features/contratos/data";
+import { getContractsData } from "@/features/contratos/data";
 import { ShareButton } from "@/components/ShareButton";
-export const dynamicParams = false;
-export function generateStaticParams() {
-  return contractSnapshot.contracts.length
-    ? contractSnapshot.contracts.map((contract) => ({ id: contract.id }))
-    : [{ id: "base-indisponivel" }];
-}
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
+  const { contractsById } = await getContractsData();
   return {
     title:
       contractsById.get((await params).id)?.number ?? "Contrato não encontrado",
@@ -27,6 +22,9 @@ export default async function ContractDetail({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const [{ snapshot }, { contractsById, contractSnapshot }] = await Promise.all(
+    [getWorksData(), getContractsData()],
+  );
   const contract = contractsById.get((await params).id);
   if (!contract) notFound();
   const works = snapshot.works.filter(

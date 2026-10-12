@@ -1,6 +1,6 @@
 # Persistência e atualização automática
 
-Fluxo: `API municipal → coletor Node.js → Supabase → JSON → build Next.js → Cloudflare`. O site continua estático, com busca e filtros no navegador. Nenhuma credencial Supabase é necessária para consultar o observatório.
+Fluxo: `API municipal → coletor Node.js → Supabase → servidor Next.js no Worker → site`. Páginas e downloads consultam o estado persistido durante cada requisição; busca e filtros continuam no navegador. O servidor exige `SUPABASE_URL` e `SUPABASE_SECRET_KEY`, sem expor credenciais ao visitante. Consulte [a configuração Cloudflare/OpenNext](cloudflare.md).
 
 ## Banco
 
@@ -40,7 +40,7 @@ Os quatro Actions secrets foram cadastrados no repositório. O token Cloudflare 
 1. Criar `observatorio-pvh` na organização `Santi`, preferencialmente na região São Paulo. Conferir o plano e o custo no painel antes da criação.
 2. Aplicar a migração ao projeto novo e verificar as seis tabelas e as duas RPCs.
 3. Configurar `SUPABASE_URL` e uma **secret key de servidor** no ambiente da coleta. A chave legada `service_role` também é aceita; chaves públicas são rejeitadas.
-4. Executar `npm run sync`, `npm run data:export`, testes, typecheck, build e deploy.
+4. Executar as coletas, testes, typecheck, `npm run build:cloudflare` e deploy. A exportação local é opcional.
 
 Use `.env.example` como referência. O script não carrega `.env` automaticamente. No Node.js 24, para uso local com `.env.local` ignorado pelo Git:
 
@@ -65,17 +65,17 @@ Cadastre estes **Actions secrets** em `santidev95/observatorio-pvh`:
 | `CLOUDFLARE_API_TOKEN` | Token com Workers Scripts: Edit na conta utilizada |
 | `PMPV_API_TOKEN` | Opcional; atualmente a API municipal permite acesso anônimo |
 
-O token GitHub tem somente `contents: read`; nenhum snapshot ou segredo é commitado automaticamente. As credenciais Supabase ficam somente nos passos de coleta/exportação, nunca no build Next.js. As credenciais Cloudflare ficam no deploy. A verificação inicial imprime somente nomes de secrets ausentes.
+O token GitHub tem somente `contents: read`; nenhum snapshot ou segredo é commitado automaticamente. As credenciais Supabase ficam nos passos de coleta e configuração dos secrets do Worker, nunca no build Next.js nem no cliente. As credenciais Cloudflare ficam nos passos de configuração e deploy. A verificação inicial imprime somente nomes de secrets ausentes.
 
-Execuções são serializadas sem cancelar coletas em andamento. A base é persistida antes da exportação. `partial` pode ser publicado com o aviso previsto na interface; falha da origem, banco, testes ou build impede o deploy e preserva a versão pública anterior. Falha depois da persistência não desfaz a coleta válida: uma nova exportação/build pode publicá-la.
+Execuções são serializadas sem cancelar coletas em andamento. O site consulta cada estado assim que ele é persistido. Coletas parciais ou falhas da origem preservam a última base válida e seu aviso. Falha de leitura do banco resulta no estado de erro da página, sem arquivos locais. A execução agendada não faz build/deploy; pushes e execuções manuais publicam o código após validação. Testes posteriores à persistência não desfazem os dados já gravados.
 
 ## Publicações fora do workflow
 
-O build lê `data/snapshot.json`; não consulta Supabase sozinho. A atualização diária executa `data:export` antes do build para publicar a revisão persistida.
+O build não lê `data/snapshot.json` e não consulta Supabase. Os carregadores consultam `observatory_load_state` no servidor durante a requisição. Novos IDs de obras e contratos podem ser acessados sem nova construção.
 
-Se Workers Builds continuar ativo, um push pode publicar o snapshot antigo versionado. Para centralizar produção no workflow, desative os builds automáticos da integração Git na Cloudflare; o Actions passa a cuidar de pushes, execuções diárias e publicações manuais. Alternativamente, configure nessa integração as variáveis Supabase e o build `npm run data:export && npm run build`. A criação do YAML não modifica essas configurações remotas.
+Se Workers Builds continuar ativo, um push pode gerar uma publicação concorrente. Centralize a publicação no workflow. Para outra integração, use `npm run build:cloudflare` e `npm run deploy`, com secrets Supabase no runtime do Worker. A criação do YAML não modifica configurações remotas.
 
-Na implantação de 11/10/2026, a opção **Disable builds** foi ativada e salva em **Workers → observatorio-pvh → Settings → Compilações → Produção**, preservando a conexão com o repositório. Para restaurar os builds da Cloudflare, desative essa opção; primeiro ajuste o build para exportar a base persistida, conforme descrito acima.
+Na implantação de 11/10/2026, a opção **Disable builds** foi ativada e salva em **Workers → observatorio-pvh → Settings → Compilações → Produção**, preservando a conexão com o repositório. Para restaurar os builds da Cloudflare, desative essa opção; primeiro ajuste os comandos para OpenNext e configure os secrets do runtime.
 
 Um arquivo local não comprova agendamento ativo: é necessário enviá-lo ao GitHub, configurar os secrets e completar uma execução real. Banco e migração também são etapas remotas separadas.
 

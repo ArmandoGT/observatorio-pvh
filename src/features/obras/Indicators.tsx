@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { latestWorks, snapshot } from "@/lib/data";
+import { getWorksData } from "@/lib/data";
 import { dateLabel } from "@/lib/display";
 import { FigmaAsset } from "@/components/FigmaAsset";
 
-export function ObrasIndicators() {
+export async function ObrasIndicators() {
+  const { snapshot, latestWorks } = await getWorksData();
   const statusCounts = [...new Set(latestWorks.map((work) => work.status))].map(
     (status) => ({
       status,

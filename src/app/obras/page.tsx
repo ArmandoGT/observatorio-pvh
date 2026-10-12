@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { latestWorks, snapshot } from "@/lib/data";
+import { getWorksData } from "@/lib/data";
 import { WorkList } from "@/components/WorkList";
 import { currency, dateLabel, sumKnown } from "@/lib/display";
 import { oldWorkCount } from "@/lib/work-presentation";
 export const metadata: Metadata = { title: "Explorar obras" };
-export default function Works() {
+export default async function Works() {
+  const { latestWorks, snapshot } = await getWorksData();
   return (
     <main id="conteudo" className="container page-main catalog-page">
       <div className="catalog-heading">

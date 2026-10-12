@@ -13,6 +13,8 @@ data/*.tmp
 evidence/*.html
 .cache/
 .wrangler/
+.open-next/
+.dev.vars*
 data/raw/
 evidence/api-obras.json
 evidence/api-contratos.json

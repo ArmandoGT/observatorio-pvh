@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { FileText } from "lucide-react";
 import { dateLabel } from "@/lib/display";
-import { latestContracts, contractSnapshot, contractTotal } from "./data";
-export function ContractsIndicators() {
+import { getContractsData, contractTotal } from "./data";
+export async function ContractsIndicators() {
+  const { latestContracts, contractSnapshot } = await getContractsData();
   const statuses = [
     ...new Set(latestContracts.map((contract) => contract.status)),
   ]
@@ -27,7 +28,7 @@ export function ContractsIndicators() {
     }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 5);
-  const total = contractTotal();
+  const total = contractTotal(latestContracts);
   return (
     <section
       className="analytics"

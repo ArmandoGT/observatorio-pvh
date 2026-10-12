@@ -63,16 +63,23 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
           PMPV_API_TOKEN: ${{ secrets.PMPV_API_TOKEN }}
-      - name: Exportar a base persistida para o site
-        run: npm run data:export
+      - run: npm test
+      - run: npm run typecheck
+      - run: npm run build:cloudflare
+        if: github.event_name != 'schedule'
+      - run: npm run deploy:check
+        if: github.event_name != 'schedule'
+      - name: Configurar credenciais de leitura no servidor
+        if: github.event_name != 'schedule'
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
-      - run: npm test
-      - run: npm run typecheck
-      - run: npm run build
-      - run: npm run deploy:check
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          node --input-type=module -e 'process.stdout.write(JSON.stringify({SUPABASE_URL:process.env.SUPABASE_URL,SUPABASE_SECRET_KEY:process.env.SUPABASE_SECRET_KEY}))' | npx wrangler secret bulk
       - name: Publicar na Cloudflare
+        if: github.event_name != 'schedule'
         run: npm run deploy
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

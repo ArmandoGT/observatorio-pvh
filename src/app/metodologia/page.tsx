@@ -1,16 +1,17 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { ArrowUpRight, CheckCircle2, AlertCircle } from "lucide-react";
-import { snapshot, latestWorks } from "@/lib/data";
-import { contractSnapshot, latestContracts } from "@/features/contratos/data";
-import { revenueSnapshot } from "@/features/receitas/data";
+import { getWorksData } from "@/lib/data";
+import { getContractsData } from "@/features/contratos/data";
+import { getRevenueData } from "@/features/receitas/data";
+import type { Snapshot } from "@/lib/schema";
 import { dateLabel } from "@/lib/display";
 import { FigmaAsset } from "@/components/FigmaAsset";
 import { oldWorkCount } from "@/lib/work-presentation";
 import { DisclosureAnchors } from "@/components/DisclosureAnchors";
 export const metadata: Metadata = { title: "Fontes e método" };
 
-function SourceCard({ source }: { source: (typeof snapshot.sources)[number] }) {
+function SourceCard({ source }: { source: Snapshot["sources"][number] }) {
   return (
     <article className="source-card">
       <h3>{source.title}</h3>
@@ -66,7 +67,12 @@ function SourceCard({ source }: { source: (typeof snapshot.sources)[number] }) {
   );
 }
 
-export default function Method() {
+export default async function Method() {
+  const [
+    { snapshot, latestWorks },
+    { contractSnapshot, latestContracts },
+    { revenueSnapshot },
+  ] = await Promise.all([getWorksData(), getContractsData(), getRevenueData()]);
   const old = oldWorkCount(latestWorks, snapshot.generatedAt);
   return (
     <main id="conteudo" className="container page-main method-page">
@@ -283,8 +289,9 @@ export default function Method() {
               <li>
                 A periodicidade de publicação municipal não foi confirmada. A
                 sincronização é programada diariamente às 06:17, no horário de
-                Porto Velho, e também pode ser acionada manualmente. A
-                publicação estática exige nova construção após a coleta.
+                Porto Velho, e também pode ser acionada manualmente. A base
+                persistida é consultada a cada acesso, sem nova construção após
+                a coleta.
               </li>
               <li>
                 Se a coleta falhar, conservamos a última base válida. Registros

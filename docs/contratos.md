@@ -4,7 +4,7 @@
 
 O catálogo `/contratos/` usa somente o modelo `Contratos` da API municipal,
 em todos os anos disponíveis. Convênios, acordos, locações e outros modelos
-não são incorporados por aproximação. Uma ficha estática é gerada por ID,
+não são incorporados por aproximação. Uma ficha consulta a base por ID,
 em `/contratos/pvh-contrato-{id}/`.
 
 Fonte: `https://api.portovelho.ro.gov.br/api/v1/contratos?modelo=Contratos&por-pagina=100`.
@@ -57,7 +57,7 @@ As tentativas guardam metadados e hash do payload, sem uma nova cópia integral
 do catálogo por execução. O estado atual e as versões efetivamente alteradas
 preservam os dados necessários ao histórico.
 
-Os arquivos `data/contracts-snapshot.json` e `public/dados/contratos.json`
+Os arquivos `data/contracts-snapshot.json` e `data/exports/contratos.json`
 contêm a mesma base normalizada. `npm run data:export` lê obras e contratos do
 Supabase e impede a publicação se qualquer módulo obrigatório não tiver coleta válida.
 

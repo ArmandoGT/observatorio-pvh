@@ -1,16 +1,31 @@
-import data from "../../../data/contracts-snapshot.json";
-import { contractSnapshotSchema, type ContractSummary } from "./schema";
-export const contractSnapshot = contractSnapshotSchema.parse(data);
-export const latestContracts = contractSnapshot.contracts.filter(
-  (contract) => contract.inLatestSnapshot,
-);
-export const contractsById = new Map(
-  contractSnapshot.contracts.map((contract) => [contract.id, contract]),
-);
-export const contractsBySourceId = new Map(
-  contractSnapshot.contracts.map((contract) => [contract.sourceId, contract]),
-);
-export function contractSummaries(): ContractSummary[] {
+import "server-only";
+import { cache } from "react";
+import { getDatabaseSnapshot } from "../../lib/database";
+import type { Contract, ContractSummary } from "./schema";
+
+export const getContractsData = cache(async () => {
+  const contractSnapshot = await getDatabaseSnapshot("contratos-pvh");
+  const latestContracts = contractSnapshot.contracts.filter(
+    (contract) => contract.inLatestSnapshot,
+  );
+  return {
+    contractSnapshot,
+    latestContracts,
+    contractsById: new Map(
+      contractSnapshot.contracts.map((contract) => [contract.id, contract]),
+    ),
+    contractsBySourceId: new Map(
+      contractSnapshot.contracts.map((contract) => [
+        contract.sourceId,
+        contract,
+      ]),
+    ),
+  };
+});
+
+export function contractSummaries(
+  latestContracts: Contract[],
+): ContractSummary[] {
   return latestContracts.map(
     ({
       id,
@@ -49,7 +64,7 @@ export function contractSummaries(): ContractSummary[] {
     }),
   );
 }
-export function contractTotal() {
+export function contractTotal(latestContracts: Contract[]) {
   const known = latestContracts.filter(
     (contract) => contract.valueCents !== null,
   );

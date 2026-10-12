@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { snapshotSchema, type Snapshot } from "../../src/lib/schema";
+import { supabaseConfig } from "../../src/lib/supabase-config";
+export { supabaseConfig } from "../../src/lib/supabase-config";
 
 export const ingestionModule = "obras-pvh";
 const stateSchema = z.object({
@@ -18,41 +20,6 @@ export interface SnapshotStore {
     revision: number,
     options?: { kind?: "seed" | "sync"; raw?: unknown[]; startedAt?: string },
   ): Promise<number>;
-}
-
-export function supabaseConfig(env: Record<string, string | undefined>) {
-  const url = env.SUPABASE_URL;
-  const key = env.SUPABASE_SECRET_KEY;
-  if (!url && !key && env.SUPABASE_REQUIRED !== "true") return null;
-  if (!url || !key)
-    throw new Error(
-      "Configure SUPABASE_URL e SUPABASE_SECRET_KEY no ambiente do coletor.",
-    );
-  const parsed = new URL(url);
-  if (
-    parsed.protocol !== "https:" ||
-    parsed.username ||
-    parsed.password ||
-    parsed.search ||
-    parsed.hash
-  )
-    throw new Error("SUPABASE_URL deve ser um endereço HTTPS sem credenciais.");
-  if (!(key.startsWith("sb_secret_") || key.startsWith("eyJ")))
-    throw new Error(
-      "Use uma chave secreta de servidor para o coletor, nunca a publishable key.",
-    );
-  // Chaves JWT legadas precisam identificar explicitamente service_role.
-  if (key.startsWith("eyJ")) {
-    let role: unknown;
-    try {
-      role = JSON.parse(
-        Buffer.from(key.split(".")[1], "base64url").toString(),
-      ).role;
-    } catch {}
-    if (role !== "service_role")
-      throw new Error("A chave JWT do coletor precisa ser service_role.");
-  }
-  return { url: parsed.origin, key };
 }
 
 export function createIngestionRpc(

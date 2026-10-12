@@ -7,11 +7,14 @@
     "node": ">=22.0.0"
   },
   "scripts": {
+    "postinstall": "patch-package --error-on-fail",
     "dev": "next dev --hostname 127.0.0.1",
     "build": "next build",
-    "deploy": "wrangler deploy",
+    "build:cloudflare": "opennextjs-cloudflare build",
+    "preview": "wrangler dev --env-file=.env.local",
+    "deploy": "opennextjs-cloudflare deploy -- --keep-vars",
     "deploy:check": "wrangler deploy --dry-run",
-    "start": "node scripts/serve.mjs",
+    "start": "next start --hostname 127.0.0.1",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/*.test.ts",
     "sync": "tsx scripts/sync.ts",
@@ -21,12 +24,14 @@
     "probe": "node scripts/probe.mjs"
   },
   "dependencies": {
+    "@opennextjs/cloudflare": "1.20.10",
     "@supabase/supabase-js": "2.117.3",
     "cheerio": "1.2.0",
     "lucide-react": "0.468.0",
     "next": "16.4.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "server-only": "0.0.1",
     "zod": "4.6.5"
   },
   "devDependencies": {
@@ -34,6 +39,7 @@
     "@types/node": "22.20.5",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
+    "patch-package": "8.0.1",
     "prettier": "3.9.10",
     "supabase": "2.120.0",
     "tsx": "4.23.15",

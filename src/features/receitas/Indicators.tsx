@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { CircleDollarSign } from "lucide-react";
 import { currency, dateLabel, percentLabel } from "@/lib/display";
-import { latestRevenue, latestRevenueYear, revenueSnapshot } from "./data";
+import { getRevenueData } from "./data";
 import { revenueTotals } from "./filters";
-export function RevenueIndicators() {
+export async function RevenueIndicators() {
+  const { latestRevenue, latestRevenueYear, revenueSnapshot } =
+    await getRevenueData();
   const totals = revenueTotals(
     latestRevenue.filter(
       (e) => e.year === latestRevenueYear && e.kind === "budget",
@@ -25,7 +27,8 @@ export function RevenueIndicators() {
           <div>
             <h2 id="revenue-indicators-heading">Receitas e orçamento</h2>
             <p>
-              Receita orçamentária · {latestRevenueYear} · Documentos até{" "}
+              Receita orçamentária ·{" "}
+              {latestRevenueYear ?? "Sem exercício disponível"} · Documentos até{" "}
               {dateLabel(asOf)}
             </p>
           </div>

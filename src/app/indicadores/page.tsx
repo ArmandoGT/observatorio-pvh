@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { snapshot } from "@/lib/data";
+import { getWorksData } from "@/lib/data";
 import { ObrasIndicators } from "@/features/obras/Indicators";
 import { ContractsIndicators } from "@/features/contratos/Indicators";
 import { RevenueIndicators } from "@/features/receitas/Indicators";
@@ -10,7 +10,8 @@ export const metadata: Metadata = {
     "Indicadores dos dados públicos de Porto Velho. Consulte obras, contratos e receitas municipais, com fontes e cobertura.",
 };
 
-export default function Indicators() {
+export default async function Indicators() {
+  const { snapshot } = await getWorksData();
   return (
     <main id="conteudo" className="container page-main indicators-page">
       <div className="page-kicker">
